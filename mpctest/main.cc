@@ -59,9 +59,13 @@ int main() {
   auto sender_stats = contexts[0]->GetStats();
   auto receiver_stats = contexts[1]->GetStats();
 
-  std::cout << "Sender sent bytes: " << sender_stats->sent_bytes.load() << std::endl;
-  std::cout << "Sender received bytes: " << sender_stats->recv_bytes.load() << std::endl;
-  std::cout << "Receiver sent bytes: " << receiver_stats->sent_bytes.load() << std::endl;
-  std::cout << "Receiver received bytes: " << receiver_stats->recv_bytes.load() << std::endl;
+  auto bytesToMB = [](size_t bytes) -> double {
+    return static_cast<double>(bytes) / (1024 * 1024);
+  };
+
+  std::cout << "Sender sent bytes: " << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Sender received bytes: " << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Receiver sent bytes: " << bytesToMB(receiver_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Receiver received bytes: " << bytesToMB(receiver_stats->recv_bytes.load()) << " MB" << std::endl;
   return 0;
 }
