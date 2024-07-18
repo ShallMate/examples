@@ -17,14 +17,19 @@ load("//bazel:yacl.bzl", "yacl_cc_binary")
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_binary(
-    name = "f2k_example",
+    name = "bokvs_example",
     srcs = [
+        "bokvs.cc",
         "main.cc",
+        "bokvs.h",
     ],
     deps = [
     "//yacl/base:int128",
     "//yacl/math/f2k:f2k",
     "//examples/okvs:galois128",
+    "//yacl/crypto/hash:blake3",
+    "//yacl/utils:parallel",
+    "//yacl/crypto/hash:hash_utils"
     ],
     copts = ["-maes", "-mpclmul"],
 )

@@ -27,4 +27,5 @@ yacl_cc_binary(
         "//yacl/kernel/algorithms:silent_vole",
         "//yacl/link:test_util"
     ],
+    copts = ["-maes", "-mpclmul"],
 )

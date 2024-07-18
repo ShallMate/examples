@@ -1,7 +1,9 @@
 #include <iostream>
 #include <bitset>
+#include "examples/okvs/galois128.h"
 #include "yacl/base/int128.h"
 #include "yacl/math/f2k/f2k.h"
+#include "yacl/utils/platform_utils.h"
 
 
 
@@ -17,7 +19,7 @@ void printUint128(uint128_t value) {
     std::cout << "0x" << std::hex << high << low << std::dec << std::endl;
 }
 
-int main() {
+void TestF2k(){
     // 输入128位二进制字符串
     std::string binaryString = "1100101011110110111010101101110101110010101101010111010101010010";
     
@@ -68,6 +70,22 @@ int main() {
     } else {
         std::cout << "GfAdd128 is incorrect." << std::endl;
     }
+}
 
+int main() {
+    std::string binaryString = "1100101011110110111010101101110101110010101101010111010101010010";
+    
+    // 将二进制字符串转换为uint128_t
+    uint128_t element = binaryStringToUint128(binaryString);
+
+    // 计算逆元
+    okvs::Galois128 elementf(element); 
+
+    // 验证逆元
+    okvs::Galois128 inv = elementf.Inv();
+    okvs::Galois128 product = elementf*inv;
+    uint128_t product128 = product.get<uint128_t>(0);
+    std::cout<<product128<<std::endl;
+    std::cout<<yacl::hasAVX2()<<std::endl;
     return 0;
 }
