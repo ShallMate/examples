@@ -1,7 +1,8 @@
 #include <iostream>
+#include <ostream>
 #include <vector>
 
-#include "examples/okvs/baxos.h"
+#include "examples/fastpsi/bokvs.h"
 #include "examples/okvs/galois128.h"
 
 #include "yacl/base/int128.h"
@@ -26,14 +27,12 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   return ret;
 }
 
-std::vector<uint128_t> RR22PsiRecv(
+std::vector<uint128_t> FastPsiRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
-  uint128_t okvssize = baxos.size();
+    std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs) {
+  uint128_t okvssize = ourokvs.getM();
 
-  // VOLE
-  ctx->SendAsync(ctx->NextRank(), yacl::SerializeUint128(okvssize),
-                 "baxos.size");
+
   // VOLE
   const auto codetype = yacl::crypto::CodeType::Silver5;
   std::vector<uint128_t> a(okvssize);
@@ -44,25 +43,22 @@ std::vector<uint128_t> RR22PsiRecv(
   });
 
   // Encode
-  std::vector<uint128_t> p(okvssize);
-  baxos.Solve(absl::MakeSpan(elem_hashes), absl::MakeSpan(elem_hashes),
-              absl::MakeSpan(p), nullptr, 8);
-
+  ourokvs.Encode(elem_hashes, elem_hashes);
   std::vector<uint128_t> aprime(okvssize);
 
   yacl::parallel_for(0, aprime.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
-      aprime[idx] = a[idx] ^ p[idx];
+      aprime[idx] = a[idx] ^ ourokvs.p_[idx];
     }
   });
   volereceiver.get();
+  
   ctx->SendAsync(
       ctx->NextRank(),
       yacl::ByteContainerView(aprime.data(), aprime.size() * sizeof(uint128_t)),
       "Send A' = P+A");
   std::vector<uint128_t> receivermasks(elem_hashes.size());
-  baxos.Decode(absl::MakeSpan(elem_hashes), absl::MakeSpan(receivermasks),
-               absl::MakeSpan(c), 8);
+  ourokvs.DecodeOtherP(elem_hashes, receivermasks,c);
   std::vector<uint128_t> sendermasks(elem_hashes.size());
   auto buf = ctx->Recv(ctx->PrevRank(), "Receive masks of sender");
   YACL_ENFORCE(buf.size() == int64_t(elem_hashes.size() * sizeof(uint128_t)));
@@ -84,10 +80,9 @@ std::vector<uint128_t> RR22PsiRecv(
   return intersection_elements;
 }
 
-void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
-  size_t okvssize =
-      DeserializeUint128(ctx->Recv(ctx->PrevRank(), "baxos.size"));
+void FastPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
+                 std::vector<uint128_t>& elem_hashes, OKVSBK ourokvs) {
+  uint128_t okvssize = ourokvs.getM();
   const auto codetype = yacl::crypto::CodeType::Silver5;
   std::vector<uint128_t> b(okvssize);
   uint128_t delta = 0;
@@ -109,8 +104,7 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
     }
   });
   std::vector<uint128_t> sendermasks(elem_hashes.size());
-  baxos.Decode(absl::MakeSpan(elem_hashes), absl::MakeSpan(sendermasks),
-               absl::MakeSpan(k), 8);
+  ourokvs.DecodeOtherP(elem_hashes, sendermasks,k);
   yacl::parallel_for(0, elem_hashes.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
       sendermasks[idx] =
@@ -125,44 +119,38 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
 }
 
 int main() {
-  // 确保链接上下文定义正确
-  // 准备OKVS的参数
-  const uint64_t num = 1048576;
-  size_t bin_size = num;
-  size_t weight = 3;
-  // statistical security parameter
-  size_t ssp = 40;
+  size_t n = 1<<20;
+  size_t w = 512;
+  double e = 1.01;
+  OKVSBK ourokvs(n, w, e);
+  auto r = ourokvs.getR();
+  std::cout << "N: " << ourokvs.getN() << std::endl;
+  std::cout << "M: " << ourokvs.getM() << std::endl;
+  std::cout << "W: " << ourokvs.getW() << std::endl;
+  std::cout << "R: " << r << std::endl;
+  std::cout << "e: " << ourokvs.getE() << std::endl;
 
-  okvs::Baxos baxos;
   yacl::crypto::Prg<uint128_t> prng(yacl::crypto::FastRandU128());
 
   uint128_t seed;
   prng.Fill(absl::MakeSpan(&seed, 1));
-
-  SPDLOG_INFO("items_num:{}, bin_size:{}", num, bin_size);
-
-  baxos.Init(num, bin_size, weight, ssp, okvs::PaxosParam::DenseType::GF128,
-             seed);
-
-  SPDLOG_INFO("baxos.size(): {}", baxos.size());
-
-  std::vector<uint128_t> items_a = CreateRangeItems(0, num);
-  std::vector<uint128_t> items_b = CreateRangeItems(10, num);
+  std::vector<uint128_t> items_a = CreateRangeItems(0, n);
+  std::vector<uint128_t> items_b = CreateRangeItems(10, n);
   
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
-  std::future<void> rr22_sender = std::async(
-      std::launch::async, [&] { RR22PsiSend(lctxs[0], items_a, baxos); });
+  std::future<void> fastpsi_sender = std::async(
+      std::launch::async, [&] { FastPsiSend(lctxs[0], items_a, ourokvs); });
 
-  std::future<std::vector<uint128_t>> rr22_receiver =
+  std::future<std::vector<uint128_t>> fastpsi_receiver =
       std::async(std::launch::async,
-                 [&] { return RR22PsiRecv(lctxs[1], items_b, baxos); });
+                 [&] { return FastPsiRecv(lctxs[1], items_b, ourokvs); });
 
-  rr22_sender.get();
-  auto psi_result = rr22_receiver.get();
+  fastpsi_sender.get();
+  auto psi_result = fastpsi_receiver.get();
   auto end_time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> duration = end_time - start_time;
   std::cout << "Execution time: " << duration.count() << " seconds"
@@ -170,6 +158,7 @@ int main() {
   ;
 
   std::sort(psi_result.begin(), psi_result.end());
+  //std::cout<<psi_result.size()<<std::endl;
   auto bytesToMB = [](size_t bytes) -> double {
     return static_cast<double>(bytes) / (1024 * 1024);
   };

@@ -8,7 +8,7 @@
 #include <vector>
 #include "examples/okvs/galois128.h"
 #include "yacl/base/int128.h"
-#include "examples/bokvs/bokvs.h"
+#include "examples/fastpsi/bokvs.h"
 #include "yacl/utils/parallel.h"
 
 // 定义一个常量的数组 bitMasks

@@ -17,19 +17,18 @@ load("//bazel:yacl.bzl", "yacl_cc_binary")
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_binary(
-    name = "bokvs",
+    name = "fastpsi",
     srcs = [
-        "bokvs.cc",
-        "main.cc",
         "bokvs.h",
+        "bokvs.cc",
+        "main.cc"
+        
     ],
     deps = [
-    "//yacl/base:int128",
-    "//yacl/math/f2k:f2k",
-    "//examples/okvs:galois128",
-    "//yacl/crypto/hash:blake3",
-    "//yacl/utils:parallel",
-    "//yacl/crypto/hash:hash_utils"
+        "//examples/okvs:galois128",
+        "//examples/okvs:baxos",
+        "//yacl/kernel/algorithms:silent_vole",
+        "//yacl/link:test_util",
     ],
     copts = ["-maes", "-mpclmul"],
 )
