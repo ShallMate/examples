@@ -23,14 +23,15 @@ yacl_cc_binary(
         "bokvs.cc",
         "fastpsi.h",
         "fastpsi.cc",
+        "galois128.h",
+        "galois128.cc",
         "main.cc"
         
     ],
     deps = [
-        "//examples/okvs:galois128",
-        "//examples/okvs:baxos",
         "//yacl/kernel/algorithms:silent_vole",
         "//yacl/link:test_util",
+        "//yacl/utils:platform_utils"
     ],
     copts = ["-maes", "-mpclmul"],
 )

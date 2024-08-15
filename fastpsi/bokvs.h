@@ -15,13 +15,11 @@
 #pragma once
 
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <vector>
 #include <cstring>
 #include "yacl/base/int128.h"
-#include "c/blake3.h"
-#include "examples/okvs/galois128.h"
+#include "examples/fastpsi/galois128.h"
 
 struct Row {
     int64_t pos;

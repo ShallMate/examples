@@ -19,8 +19,8 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 
 int main() {
     // 示例参数
-    size_t n = 1<<20;
-    size_t w = 512;
+    size_t n = 1<<24;
+    size_t w = 1024;
     double e = 1.01;
     // 创建OKVSBK实例
     OKVSBK ourokvs(n, w, e);

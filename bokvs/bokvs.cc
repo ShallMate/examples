@@ -76,19 +76,25 @@ bool OKVSBK::Encode(std::vector<uint128_t> keys,std::vector<uint128_t> values){
 			if (getBit(rows[i].row[static_cast<int>(j/8)], j%8)) {
 				piv[i] = j + rows[i].pos;
                 flags[i] = true;
+                int kk = n;
 				for(int64_t k = i + 1; k < n; k++) {
 					if(rows[k].pos > piv[i]) {
+                        kk = k;
 						break;
 					}
-					int64_t posk = piv[i] - rows[k].pos;
-					if (getBit(rows[k].row[static_cast<int>(posk/8)], posk%8)) {
-						int64_t shiftnum = rows[k].bpos - rows[i].bpos;
+                }
+                yacl::parallel_for(i + 1, kk, [&](int64_t begin, int64_t end) {
+                for (int64_t idx = begin; idx < end; ++idx) {
+                    	int64_t posk = piv[i] - rows[idx].pos;
+					if (getBit(rows[idx].row[static_cast<int>(posk/8)], posk%8)) {
+						int64_t shiftnum = rows[idx].bpos - rows[i].bpos;
                         for(int64_t bb = 0; bb < b-shiftnum; bb++){
-								rows[k].row[bb] = rows[k].row[bb] ^ rows[i].row[bb+shiftnum];
+								rows[idx].row[bb] = rows[idx].row[bb] ^ rows[i].row[bb+shiftnum];
 							}
-						rows[k].value = rows[k].value ^ rows[i].value;
+						rows[idx].value = rows[idx].value ^ rows[i].value;
 					}
-				}
+                }
+                });
 				break;
 			}
 		}

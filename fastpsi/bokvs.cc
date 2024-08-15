@@ -16,7 +16,7 @@
 #include <cstdint>
 #include "c/blake3.h"
 #include <vector>
-#include "examples/okvs/galois128.h"
+#include "examples/fastpsi/galois128.h"
 #include "yacl/base/int128.h"
 #include "examples/fastpsi/bokvs.h"
 #include "yacl/utils/parallel.h"
