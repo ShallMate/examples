@@ -21,6 +21,8 @@ yacl_cc_binary(
     srcs = [
         "bokvs.h",
         "bokvs.cc",
+        "fastpsi.h",
+        "fastpsi.cc",
         "main.cc"
         
     ],

@@ -1,4 +1,4 @@
-// Copyright 2019 Ant Group Co., Ltd.
+// Copyright 2024 Guowei Ling.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,6 +65,10 @@ public:
 
     double getE() const {
         return e_;
+    }
+
+     double getB() const {
+        return b_;
     }
 
     bool Encode(std::vector<uint128_t> keys, std::vector<uint128_t> values);

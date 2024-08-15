@@ -1,10 +1,20 @@
+// Copyright 2024 Guowei Ling.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
-#include <iterator>
-#include <ostream>
+#include "c/blake3.h"
 #include <vector>
 #include "examples/okvs/galois128.h"
 #include "yacl/base/int128.h"
@@ -51,7 +61,7 @@ Row Ro(uint128_t key, uint128_t r, size_t n,uint128_t value) {
     std::vector<uint8_t> row = HashToFixedSize(n,key);
     int64_t pos = BytesToUint128(row)%r;
     int64_t bpos = pos/8;
-    pos = bpos*8;
+    pos = bpos<<3;
     return {pos, bpos,row,value};
 }
 
@@ -120,7 +130,7 @@ void OKVSBK::Decode(std::vector<uint128_t> keys, std::vector<uint128_t>& values)
     for (int64_t idx = begin; idx < end; ++idx) {
           std::vector<uint8_t> row = HashToFixedSize(b,keys[idx]);
             int64_t pos = BytesToUint128(row)%r;
-            pos = (pos/8)*8;
+            pos = (pos/8)<<3;
 	        for(int64_t j = pos;j < w+pos; j++){
 		    if(getBit(row[(j-pos)/8], (j-pos)%8)){
 			    values[idx] = values[idx] ^ p[j];
