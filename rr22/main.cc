@@ -68,18 +68,17 @@ std::vector<uint128_t> RR22PsiRecv(
   YACL_ENFORCE(buf.size() == int64_t(elem_hashes.size() * sizeof(uint128_t)));
   std::memcpy(sendermasks.data(), buf.data(), buf.size());
 
-  unordered_set<uint128_t, Uint128Hash> sender_set(sendermasks.begin(), sendermasks.end());
   std::vector<uint128_t> intersection_elements;
   std::mutex intersection_mutex;
 
-  // 使用 yacl::parallel_for 查找交集并加入结果
-  yacl::parallel_for(0, receivermasks.size(), [&](int64_t begin, int64_t end) {
-      for (int64_t idx = begin; idx < end; ++idx) {
-          if (sender_set.find(receivermasks[idx]) != sender_set.end()) {
-              std::lock_guard<std::mutex> lock(intersection_mutex);
-              intersection_elements.push_back(elem_hashes[idx]);
-          }
+  std::set<uint128_t> seta(receivermasks.begin(), receivermasks.end());
+  yacl::parallel_for(0, sendermasks.size(), [&](int64_t begin, int64_t end) {
+    for (int64_t idx = begin; idx < end; ++idx) {
+        if (seta.count(sendermasks[idx]) != 0) {
+          std::lock_guard<std::mutex> lock(intersection_mutex);
+          intersection_elements.push_back(elem_hashes[idx]);
       }
+    }
   });
   return intersection_elements;
 }
