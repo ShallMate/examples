@@ -19,13 +19,13 @@ package(default_visibility = ["//visibility:public"])
 yacl_cc_binary(
     name = "pfrpsi",
     srcs = [
-        "galois128.h",
-        "galois128.cc",
+        "volepfrpsi.cc",
+        "volepfrpsi.h",
         "main.cc"
-        
     ],
     deps = [
         "//yacl/kernel/algorithms:silent_vole",
+        "//examples/pfrpsi/okvs:baxos",
         "//yacl/link:test_util",
         "//yacl/utils:platform_utils"
     ],
