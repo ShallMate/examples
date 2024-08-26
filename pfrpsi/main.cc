@@ -38,8 +38,8 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 
 
 
-void RunVolePfrpsi() {
-  size_t n = 1048576;
+void RunVolePfrPSI() {
+  size_t n = 1<<20;
   uint128_t seed;
   yacl::crypto::Prg<uint128_t> prng(yacl::crypto::FastRandU128());
   prng.Fill(absl::MakeSpan(&seed, 1));
@@ -105,5 +105,5 @@ void RunVolePfrpsi() {
 }
 
 int main(){
-  RunVolePfrpsi();
+  RunVolePfrPSI();
 }
