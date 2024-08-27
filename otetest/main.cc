@@ -1,8 +1,15 @@
 #include <iostream>
 #include <vector>
 
+#include "yacl/base/int128.h"
 #include "yacl/link/test_util.h"
 #include "yacl/kernel/algorithms/softspoken_ote.h"
+#include "yacl/kernel/algorithms/base_ot.h"
+#include "fmt/format.h"
+#include "yacl/base/exception.h"
+#include "yacl/crypto/rand/rand.h"
+#include "yacl/link/test_util.h"
+#include "yacl/base/dynamic_bitset.h"
 
 using namespace yacl::crypto;
 using namespace std;
@@ -20,7 +27,9 @@ void OTSend(const std::shared_ptr<yacl::link::Context>& ctx) {
   auto store = ss_sender.GenRot(ctx, kNumInkpOT);
 }
 
-int main() {
+
+
+void RunOte() {
   // 确保链接上下文定义正确
   const int kWorldSize = 2;
   auto contexts = yacl::link::test::SetupWorld(kWorldSize);
@@ -50,3 +59,10 @@ int main() {
   std::cout << "Receiver sent bytes: " << receiver_stats->sent_bytes.load() << std::endl;
   std::cout << "Receiver received bytes: " << receiver_stats->recv_bytes.load() << std::endl;
 }
+
+int main(){
+  RunOte();
+}
+
+
+

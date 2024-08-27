@@ -1,4 +1,4 @@
-# Copyright 2024 Guowei Ling.
+# Copyright 2024 Guowei LING
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:yacl.bzl", "yacl_cc_binary")
+load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_test")
 
 package(default_visibility = ["//visibility:public"])
 
-yacl_cc_binary(
-    name = "ote_example",
+yacl_cc_test(
+    name = "ecdh_psi",
     srcs = [
+        "ecdh_psi.h",
+        "ecdh_psi.cc",
         "main.cc"
     ],
     deps = [
-        "//yacl/link:test_util",
-        "//yacl/kernel/algorithms:softspoken_ote",
-        "//yacl/base:dynamic_bitset"
+        "//yacl/crypto/ecc",
+        "//yacl/link",
     ],
+    copts = ["-maes", "-mpclmul"],
 )
+
+
+
+
+
