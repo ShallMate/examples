@@ -2,7 +2,6 @@ import spu
 import secretflow as sf
 import numpy as np
 import pdb
-import tenseal as ts
 from joblib import Parallel, delayed
 import random
 
@@ -24,7 +23,7 @@ spu_device2 = sf.SPU(ss_config)
 sender, receiver = sf.PYU('sender'), sf.PYU('receiver')
 
 
-n = 1<<20  
+n = int((1<<20)* 1.3)  
 dnum = 5
 #t = np.random.randint(1, dnum+1)
 t = 1

@@ -24,6 +24,9 @@
 #include "yacl/link/test_util.h"
 #include "yacl/utils/parallel.h"
 #include <fstream>
+#include "examples/pfrpsi/cuckoohash.h"
+#include "examples/pfrpsi/ecdhpfrpsi.h"
+
 
 using namespace yacl::crypto;
 using namespace std;
@@ -36,9 +39,8 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   return ret;
 }
 
-
-
 void RunVolePfrPSI() {
+  std::cout<<"The OPRF-based P^2FRPSI is now being tested."<<std::endl;
   size_t n = 1<<20;
   uint128_t seed;
   yacl::crypto::Prg<uint128_t> prng(yacl::crypto::FastRandU128());
@@ -72,7 +74,7 @@ void RunVolePfrPSI() {
   auto start_time = std::chrono::high_resolution_clock::now();
   std::future<void> sender = std::async(
       std::launch::async, [&] { VOLEPFRPSI::PRFPSISend(lctxs[0], items_a, baxos,B,C2); });
-  std::future<std::vector<uint128_t>> receiver =
+  std::future<std::vector<int32_t>> receiver =
       std::async(std::launch::async,
                  [&] { return VOLEPFRPSI::PRFPSIRecv(lctxs[1], items_b, baxos,A,C1); });
   sender.get();
@@ -104,6 +106,57 @@ void RunVolePfrPSI() {
             << std::endl;
 }
 
+int RunEcdhPsi(){
+
+  std::cout<<""<<std::endl;
+  std::cout<<"The DH-based P^2FRPSI is now being tested."<<std::endl;
+  size_t s_n = 1<<20;
+  size_t r_n = 1<<20;
+  size_t cuckoosize = static_cast<uint32_t>(s_n*(1.3)); 
+  auto x = CreateRangeItems(0, s_n);
+  auto y = CreateRangeItems(0, r_n);
+  auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
+
+
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+  std::future<void> sender = std::async(
+      std::launch::async, [&] { EcdhPsiSend(lctxs[0], x,r_n,cuckoosize); });
+  std::future<std::vector<int32_t>> receiver =
+      std::async(std::launch::async,
+                 [&] { return EcdhPsiRecv(lctxs[1],y,s_n); });
+  sender.get();
+  auto z = receiver.get();
+  auto end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end_time - start_time;
+  std::cout << "Execution time: " << duration.count() << " seconds"
+            << std::endl;
+  ;
+  std::cout<<"The intersection size is "<<z.size()<<std::endl;
+  auto bytesToMB = [](size_t bytes) -> double {
+    return static_cast<double>(bytes) / (1024 * 1024);
+  };
+  auto sender_stats = lctxs[0]->GetStats();
+  auto receiver_stats = lctxs[1]->GetStats();
+  std::cout << "Sender sent bytes: "
+            << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Sender received bytes: "
+            << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Receiver sent bytes: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Receiver received bytes: "
+            << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Total Communication: "
+            << bytesToMB(receiver_stats->sent_bytes.load())+bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
+  return 0;
+}
+
+
 int main(){
   RunVolePfrPSI();
+  RunEcdhPsi();
+  return 0;
 }

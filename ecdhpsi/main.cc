@@ -29,7 +29,7 @@ std::vector<std::string> CreateRangeItems(size_t begin, size_t size) {
   return ret;
 }
 
-int main(){
+int RunEcdhPsi(){
   size_t s_n = 1<<20;
   size_t r_n = 1<<20;
   auto x = CreateRangeItems(0, s_n);
@@ -67,6 +67,9 @@ int main(){
   std::cout << "Total Communication: "
             << bytesToMB(receiver_stats->sent_bytes.load())+bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
             << std::endl;
+  return 0;
 }
 
-
+int main(){
+  RunEcdhPsi();
+}
