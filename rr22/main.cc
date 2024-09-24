@@ -12,11 +12,25 @@
 using namespace yacl::crypto;
 using namespace std;
 
-struct Uint128Hash {
-    size_t operator()(const uint128_t& key) const {
-        return std::hash<uint64_t>()(static_cast<uint64_t>(key)) ^ std::hash<uint64_t>()(static_cast<uint64_t>(key >> 64));
+inline std::vector<int32_t> GetIntersectionIdx(
+    const std::vector<uint128_t> &x, const std::vector<uint128_t> &y) {
+
+  std::set<uint128_t> set(x.begin(), x.end());
+  std::vector<int32_t> ret(y.size(), -1);  // 初始化为 -1
+
+  yacl::parallel_for(0, y.size(), [&](size_t start, size_t end) {
+    for (size_t i = start; i < end; ++i) {
+      if (set.count(y[i]) != 0) {
+        ret[i] = i; 
+      }
     }
-};
+  });
+
+  // 清除所有值为 -1 的元素
+  ret.erase(std::remove(ret.begin(), ret.end(), -1), ret.end());
+  
+  return ret;
+}
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   std::vector<uint128_t> ret;
@@ -26,7 +40,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   return ret;
 }
 
-std::vector<uint128_t> RR22PsiRecv(
+std::vector<int32_t> RR22PsiRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
     std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
   uint128_t okvssize = baxos.size();
@@ -68,19 +82,8 @@ std::vector<uint128_t> RR22PsiRecv(
   YACL_ENFORCE(buf.size() == int64_t(elem_hashes.size() * sizeof(uint128_t)));
   std::memcpy(sendermasks.data(), buf.data(), buf.size());
 
-  std::vector<uint128_t> intersection_elements;
-  std::mutex intersection_mutex;
-
-  std::set<uint128_t> seta(receivermasks.begin(), receivermasks.end());
-  yacl::parallel_for(0, sendermasks.size(), [&](int64_t begin, int64_t end) {
-    for (int64_t idx = begin; idx < end; ++idx) {
-        if (seta.count(sendermasks[idx]) != 0) {
-          std::lock_guard<std::mutex> lock(intersection_mutex);
-          intersection_elements.push_back(elem_hashes[idx]);
-      }
-    }
-  });
-  return intersection_elements;
+  auto z = GetIntersectionIdx(sendermasks, receivermasks);
+  return z;
 }
 
 void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
@@ -126,7 +129,7 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
 int main() {
   // 确保链接上下文定义正确
   // 准备OKVS的参数
-  const uint64_t num = 1048576;
+  const uint64_t num = 1<<20;
   size_t bin_size = num;
   size_t weight = 3;
   // statistical security parameter
@@ -156,7 +159,7 @@ int main() {
   std::future<void> rr22_sender = std::async(
       std::launch::async, [&] { RR22PsiSend(lctxs[0], items_a, baxos); });
 
-  std::future<std::vector<uint128_t>> rr22_receiver =
+  std::future<std::vector<int32_t>> rr22_receiver =
       std::async(std::launch::async,
                  [&] { return RR22PsiRecv(lctxs[1], items_b, baxos); });
 
@@ -183,5 +186,8 @@ int main() {
             << std::endl;
   std::cout << "Receiver received bytes: "
             << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Total Communication: "
+            << bytesToMB(receiver_stats->sent_bytes.load())+bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
             << std::endl;
 }
