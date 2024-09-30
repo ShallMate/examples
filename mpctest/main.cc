@@ -21,8 +21,9 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   const int kWorldSize = 2;
   auto contexts = yacl::link::test::SetupWorld(kWorldSize);
-  std::vector<uint128_t> items_a = CreateRangeItems(0, 1024);
-  std::vector<uint128_t> items_b = CreateRangeItems(1, 1024);
+  auto n = 1<<14;
+  std::vector<uint128_t> items_a = CreateRangeItems(0, n);
+  std::vector<uint128_t> items_b = CreateRangeItems(1, n);
 
   std::future<void> krtwpsu_sender = std::async(std::launch::async, [&] {
     KrtwPsuSend(contexts[0], items_a);

@@ -12,32 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "examples/okvspoint/aes_crhash.h"
+#pragma once
 
-#include <vector>
-
-#include "spdlog/spdlog.h"
-#include "yacl/utils/parallel.h"
+#include <cstdint>
 
 namespace okvs {
 
-namespace {
-
-}  // namespace
-
-void AesCrHash::Hash(absl::Span<const uint8_t> plaintext,
-                     absl::Span<uint8_t> ciphertext) const {
-  std::copy(plaintext.begin(), plaintext.end(), ciphertext.begin());
-}
-
-void AesCrHash::Hash(absl::Span<const uint128_t> plaintext,
-                     absl::Span<uint128_t> ciphertext) const {
-  std::copy(plaintext.begin(), plaintext.end(), ciphertext.begin());
-}
-
-uint128_t AesCrHash::Hash(uint128_t input) const {
-  uint128_t output = input;
-  return output;
-}
+class SimpleIndex {
+ public:
+  static uint64_t GetBinSize(uint64_t num_bins, uint64_t num_balls,
+                             uint64_t stat_sec_param, bool approx = true);
+};
 
 }  // namespace okvs

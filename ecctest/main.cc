@@ -94,7 +94,6 @@ int main(){
         XS[i - 1] = key;
       }
     });
-    //SerializeVector(XS, "serialized_data.bin");
     uint32_t cuckoolen = static_cast<uint32_t>(n * 1.01);
     Insert(XS,cuckoolen);
     return 0;

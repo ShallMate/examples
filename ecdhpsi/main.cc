@@ -30,8 +30,8 @@ std::vector<std::string> CreateRangeItems(size_t begin, size_t size) {
 }
 
 int RunEcdhPsi(){
-  size_t s_n = 1<<20;
-  size_t r_n = 1<<20;
+  size_t s_n = 1<<24;
+  size_t r_n = 1<<24;
   auto x = CreateRangeItems(0, s_n);
   auto y = CreateRangeItems(3, r_n);
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
