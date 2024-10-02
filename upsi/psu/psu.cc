@@ -203,6 +203,17 @@ std::vector<uint128_t> KrtwPsuRecv(
                    sizeof(ys[i]));
         ys[i] ^= seed;
       }
+      /*
+      for (size_t i = begin; i < end; ++i) {
+          xs[i] =
+            (i < bin_size ? HashToSizeT(bin_idx[i])
+                          : i > bin_size ? yacl::crypto::FastRandU64() : kBot);
+          oprf->Eval(oprf_idx, xs[i], reinterpret_cast<uint8_t*>(&ys[i]),
+                   sizeof(ys[i]));
+          ys[i] ^= seed;
+      }
+      });
+      */
       std::vector<uint64_t> coeffs = Interpolate(xs, ys);
       ctx->SendAsync(ctx->NextRank(),
                      yacl::ByteContainerView(coeffs.data(),

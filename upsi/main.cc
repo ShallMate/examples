@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <vector>
@@ -92,9 +93,9 @@ void RunRR22() {
 }
 
 void RunUPSI() {
-  const uint64_t num = 1 << 24;
-  const uint64_t addnum = 1 << 12;
-  const uint64_t subnum = 1 << 12;
+  const uint64_t num = 1 << 22;
+  const uint64_t addnum = 1 << 10;
+  const uint64_t subnum = 1 << 10;
   size_t bin_size = num;
   size_t weight = 3;
   size_t ssp = 40;
@@ -109,19 +110,24 @@ void RunUPSI() {
   SPDLOG_INFO("baxos.size(): {}", baxos.size());
 
   std::vector<uint128_t> X = CreateRangeItems(addnum, num);
-  std::vector<uint128_t> Y = CreateRangeItems(addnum, num);
+  std::vector<uint128_t> Y = CreateRangeItems(num / 2, num);
   std::vector<uint128_t> Xadd = CreateRangeItems(0, addnum);
   std::vector<uint128_t> Yadd = CreateRangeItems(0, addnum);
-  std::vector<uint128_t> Xsub = CreateRangeItems(num - subnum, num);
-  std::vector<uint128_t> Ysub = CreateRangeItems(num - subnum, num);
+  std::vector<uint128_t> Xsub = CreateRangeItems(num - subnum, subnum);
+  std::vector<uint128_t> Ysub = CreateRangeItems(num - subnum, subnum);
 
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
+  auto start_time_base = std::chrono::high_resolution_clock::now();
   std::future<std::vector<uint128_t>> rr22_sender = std::async(
       std::launch::async, [&] { return BasePsiSend(lctxs[0], X, baxos); });
   std::future<std::vector<uint128_t>> rr22_receiver = std::async(
       std::launch::async, [&] { return BasePsiRecv(lctxs[1], Y, baxos); });
   auto psi_result_sender = rr22_sender.get();
   auto psi_result = rr22_receiver.get();
+  auto end_time_base = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration_base = end_time_base - start_time_base;
+  std::cout << "Base PSI time: " << duration_base.count() << " seconds"
+            << std::endl;
   std::set<uint128_t> intersection_sender(psi_result_sender.begin(),
                                           psi_result_sender.end());
   std::set<uint128_t> intersection_receiver(psi_result.begin(),
@@ -131,6 +137,30 @@ void RunUPSI() {
   } else {
     std::cout << "The base PSI error." << std::endl;
   }
+  auto bytesToMB = [](size_t bytes) -> double {
+    return static_cast<double>(bytes) / (1024 * 1024);
+  };
+
+  auto sender_stats = lctxs[0]->GetStats();
+  auto receiver_stats = lctxs[1]->GetStats();
+  std::cout << "Base PSI Sender sent bytes: "
+            << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Base PSI Sender received bytes: "
+            << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Base PSI Receiver sent bytes: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Base PSI Receiver received bytes: "
+            << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Base PSI Total Communication: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) +
+                   bytesToMB(receiver_stats->recv_bytes.load())
+            << " MB" << std::endl;
+  size_t c1 = sender_stats->sent_bytes.load();
+  size_t c2 = sender_stats->recv_bytes.load();
+  size_t c3 = receiver_stats->sent_bytes.load();
+  size_t c4 = receiver_stats->recv_bytes.load();
   auto start_time = std::chrono::high_resolution_clock::now();
   EcdhReceiver yaddreceiver;
   EcdhSender yaddsender;
@@ -143,6 +173,8 @@ void RunUPSI() {
   std::cout << "Setup time: " << duration.count() << " seconds" << std::endl;
 
   auto newlctxs = yacl::link::test::SetupWorld(2);  // setup network
+  // newlctxs[0]->ResetStats();
+  // newlctxs[1]->ResetStats();
   auto start_time1 = std::chrono::high_resolution_clock::now();
   std::future<std::vector<uint128_t>> upsisender =
       std::async(std::launch::async, [&] {
@@ -158,6 +190,7 @@ void RunUPSI() {
   auto upsi_result_sender = upsisender.get();
   auto upsi_result_receiver = upsireceiver.get();
   auto end_time1 = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration1 = end_time1 - start_time1;
   std::set<uint128_t> upsi_intersection_sender(upsi_result_sender.begin(),
                                                upsi_result_sender.end());
   std::set<uint128_t> upsi_intersection_receiver(upsi_result_receiver.begin(),
@@ -167,27 +200,22 @@ void RunUPSI() {
   } else {
     std::cout << "The uPSI error." << std::endl;
   }
-  std::chrono::duration<double> duration1 = end_time1 - start_time1;
   std::cout << "UPSI time: " << duration1.count() << " seconds" << std::endl;
-
-  auto bytesToMB = [](size_t bytes) -> double {
-    return static_cast<double>(bytes) / (1024 * 1024);
-  };
-  auto sender_stats = newlctxs[0]->GetStats();
-  auto receiver_stats = newlctxs[1]->GetStats();
-  std::cout << "Sender sent bytes: "
-            << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
-  std::cout << "Sender received bytes: "
-            << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
-  std::cout << "Receiver sent bytes: "
-            << bytesToMB(receiver_stats->sent_bytes.load()) << " MB"
+  auto sender_stats1 = newlctxs[0]->GetStats();
+  auto receiver_stats1 = newlctxs[1]->GetStats();
+  size_t c5 = sender_stats1->sent_bytes.load() - c1;
+  size_t c6 = sender_stats1->recv_bytes.load() - c2;
+  size_t c7 = receiver_stats1->sent_bytes.load() - c3;
+  size_t c8 = receiver_stats1->recv_bytes.load() - c4;
+  std::cout << "UPSI Sender sent bytes: " << bytesToMB(c5) << " MB"
             << std::endl;
-  std::cout << "Receiver received bytes: "
-            << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+  std::cout << "UPSI Sender received bytes: " << bytesToMB(c6) << " MB"
             << std::endl;
-  std::cout << "Total Communication: "
-            << bytesToMB(receiver_stats->sent_bytes.load()) +
-                   bytesToMB(receiver_stats->recv_bytes.load())
+  std::cout << "UPSI Receiver sent bytes: " << bytesToMB(c7) << " MB"
+            << std::endl;
+  std::cout << "UPSI Receiver received bytes: " << bytesToMB(c8) << " MB"
+            << std::endl;
+  std::cout << "UPSI Total Communication: " << bytesToMB(c5) + bytesToMB(c6)
             << " MB" << std::endl;
 }
 
@@ -295,7 +323,7 @@ int RunEcdhPsi() {
 }
 
 int RunAEcdhPsi() {
-  size_t s_n = 1 << 18;
+  size_t s_n = 1 << 19;
   size_t r_n = 1 << 10;
   auto x = CreateRangeItems(200, s_n);
   // auto xadd = CreateRangeItems(100, 100);
@@ -345,4 +373,5 @@ int main() {
   // RunRR22();
   // RunPSU();
   RunUPSI();
+  // RunAEcdhPsi();
 }
