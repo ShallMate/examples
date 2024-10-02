@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -24,20 +25,18 @@
 #include "yacl/utils/parallel.h"
 
 inline std::string uint128_to_string(uint128_t value) {
-    if (value == 0) {
-        return "0";
-    }
-    std::array<char, 40> buffer;  // 预分配足够的空间，避免动态分配
-    int pos = 39;  // 从数组的最后位置开始填充
-    buffer[pos] = '\0';  // Null-terminate for C-string compatibility
-    while (value > 0) {
-        buffer[--pos] = '0' + static_cast<char>(value % 10);  // 提取当前位
-        value /= 10;  // 移动到下一位
-    }
-    return std::string(&buffer[pos]);
+  if (value == 0) {
+    return "0";
+  }
+  std::array<char, 40> buffer;  // 预分配足够的空间，避免动态分配
+  int pos = 39;                 // 从数组的最后位置开始填充
+  buffer[pos] = '\0';           // Null-terminate for C-string compatibility
+  while (value > 0) {
+    buffer[--pos] = '0' + static_cast<char>(value % 10);  // 提取当前位
+    value /= 10;                                          // 移动到下一位
+  }
+  return std::string(&buffer[pos]);
 }
-
-
 
 namespace yc = yacl::crypto;
 
@@ -55,18 +54,23 @@ class EcdhSender {
   void MaskStrings(absl::Span<std::string> in, absl::Span<yc::EcPoint> out);
   void MaskInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> out);
   void MaskEcPoints(absl::Span<yc::EcPoint> in, absl::Span<yc::EcPoint> out);
-  void MaskEcPointsD(absl::Span<yc::EcPoint> in,absl::Span<std::string> out);
-  void PointstoBuffer(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
-  void BuffertoPoints(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
-  void BuffertoStrings(absl::Span<std::uint8_t> in, absl::Span<std::string> out);
+  void MaskEcPointsD(absl::Span<yc::EcPoint> in, absl::Span<std::string> out);
+  void PointstoBuffer(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
+  void BuffertoPoints(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
+  void BuffertoStrings(absl::Span<std::uint8_t> in,
+                       absl::Span<std::string> out);
   void UpdatePRFs(absl::Span<uint128_t> in);
-  void DeletePRFs(absl::Span<std::string> in);
-  void EcdhPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,size_t size_receiver);
+  void DeletePRFs(absl::Span<uint128_t> in);
+  void EcdhPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
+                   size_t size_receiver);
+  uint32_t GetPRFSize();
 
  private:
-  yc::MPInt sk_;                     // secret key
+  yc::MPInt sk_;  // secret key
   std::set<std::string> prfs_;
+
  public:
   std::shared_ptr<yc::EcGroup> ec_;  // ec group
 };
-

@@ -23,8 +23,6 @@
 #include "yacl/link/link.h"
 #include "yacl/utils/parallel.h"
 
-
-
 namespace yc = yacl::crypto;
 
 class EcdhReceiver {
@@ -43,15 +41,19 @@ class EcdhReceiver {
   void MaskInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> out);
   void MaskEcPoints(absl::Span<yc::EcPoint> in, absl::Span<yc::EcPoint> out);
   void MaskEcPointsInv(absl::Span<yc::EcPoint> in, absl::Span<yc::EcPoint> out);
-  void MaskEcPointsD(absl::Span<yc::EcPoint> in,absl::Span<std::string> out);
-  void PointstoBuffer(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
-  void BuffertoPoints(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
-  std::vector<uint128_t> EcdhPsiRecv(const std::shared_ptr<yacl::link::Context>& ctx,std::vector<uint128_t>& y);
+  void MaskEcPointsD(absl::Span<yc::EcPoint> in, absl::Span<std::string> out);
+  void PointstoBuffer(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
+  void BuffertoPoints(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
+  std::vector<uint128_t> EcdhPsiRecv(
+      const std::shared_ptr<yacl::link::Context>& ctx,
+      std::vector<uint128_t>& y);
 
  private:
-  yc::MPInt sk_;                     // secret key
+  yc::MPInt sk_;  // secret key
   yc::MPInt skinv_;
+
  public:
   std::shared_ptr<yc::EcGroup> ec_;  // ec group
 };
-

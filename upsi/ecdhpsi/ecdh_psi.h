@@ -22,8 +22,6 @@
 #include "yacl/link/link.h"
 #include "yacl/utils/parallel.h"
 
-
-
 namespace yc = yacl::crypto;
 
 class EcdhPsi {
@@ -39,25 +37,24 @@ class EcdhPsi {
   // Mask input strings with secret key, and outputs the EcPoint results
   void MaskStrings(absl::Span<std::string> in, absl::Span<yc::EcPoint> out);
 
-
   void MaskEcPoints(absl::Span<yc::EcPoint> in, absl::Span<yc::EcPoint> out);
 
-  void MaskEcPointsD(absl::Span<yc::EcPoint> in,absl::Span<std::string> out);
+  void MaskEcPointsD(absl::Span<yc::EcPoint> in, absl::Span<std::string> out);
 
-  void PointstoBuffer(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
+  void PointstoBuffer(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
 
-  void BuffertoPoints(absl::Span<yc::EcPoint> in, absl::Span<std::uint8_t> buffer);
+  void BuffertoPoints(absl::Span<yc::EcPoint> in,
+                      absl::Span<std::uint8_t> buffer);
 
  private:
-  yc::MPInt sk_;                     // secret key
+  yc::MPInt sk_;  // secret key
  public:
   std::shared_ptr<yc::EcGroup> ec_;  // ec group
 };
 
 std::vector<size_t> EcdhPsiRecv(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<std::string>& y,size_t size_x);
-
+                                std::vector<std::string>& y, size_t size_x);
 
 void EcdhPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<std::string>& x,size_t size_y);
-
+                 std::vector<std::string>& x, size_t size_y);

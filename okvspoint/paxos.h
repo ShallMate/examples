@@ -19,13 +19,13 @@
 #include <string>
 #include <vector>
 
-#include "libdivide.h"
-#include "yacl/utils/platform_utils.h"
-
 #include "examples/okvspoint/dense_mtx.h"
 #include "examples/okvspoint/galois128.h"
 #include "examples/okvspoint/paxos_hash.h"
 #include "examples/okvspoint/paxos_utils.h"
+#include "libdivide.h"
+
+#include "yacl/utils/platform_utils.h"
 
 namespace okvs {
 

@@ -17,12 +17,12 @@ load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_library", "yacl_cc_test")
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_library(
-    name = "mpc19_psu",
+    name = "psu",
     srcs = [
-        "mpc19_psu.cc"
+        "psu.cc"
     ],
     hdrs = [
-        "mpc19_psu.h",
+        "psu.h",
     ],
     copts = AES_COPT_FLAGS,
     deps = [

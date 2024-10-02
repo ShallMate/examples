@@ -1,4 +1,4 @@
-#include "examples/upsi/psu/mpc19_psu.h"
+#include "examples/upsi/psu/psu.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -11,22 +11,20 @@
 #include "yacl/math/f2k/f2k.h"
 #include "yacl/utils/serialize.h"
 
-
 // reference: https://eprint.iacr.org/2019/1234.pdf (Figure 2)
-constexpr float kZeta{0.06F}; // 冗余率
+constexpr float kZeta{0.06F};     // 冗余率
 constexpr size_t kBinSize{64UL};  // m+1 桶中的元素个数
-constexpr uint128_t kBot{0}; 
+constexpr uint128_t kBot{0};
 constexpr size_t kNumBinsPerBatch{16UL};
 constexpr size_t kBatchSize{kNumBinsPerBatch * kBinSize};
 constexpr size_t kNumInkpOT{512UL};
 
 inline size_t HashToSizeT(const uint128_t& x) {
-    auto hash = yacl::crypto::Blake3_128({&x, sizeof(x)});
-    size_t ret;
-    std::memcpy(&ret, &hash, sizeof(ret));
-    return ret;
+  auto hash = yacl::crypto::Blake3_128({&x, sizeof(x)});
+  size_t ret;
+  std::memcpy(&ret, &hash, sizeof(ret));
+  return ret;
 }
-
 
 // simple hashing function
 auto HashInputs(const std::vector<uint128_t>& elem_hashes, size_t count) {
@@ -38,8 +36,6 @@ auto HashInputs(const std::vector<uint128_t>& elem_hashes, size_t count) {
   }
   return hashing;
 }
-
-
 
 uint64_t Evaluate(const std::vector<uint64_t>& coeffs, uint64_t x) {
   uint64_t y = coeffs.back();
@@ -85,16 +81,14 @@ std::vector<uint64_t> Interpolate(const std::vector<uint64_t>& xs,
   return coeffs;
 }
 
-void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 const std::vector<uint128_t>& elem_hashes) {
+std::vector<uint128_t> KrtwPsuSend(
+    const std::shared_ptr<yacl::link::Context>& ctx,
+    const std::vector<uint128_t>& elem_hashes) {
   ctx->SendAsync(ctx->NextRank(), yacl::SerializeUint128(elem_hashes.size()),
                  "Send set size");
   size_t peer_count =
       DeserializeUint128(ctx->Recv(ctx->PrevRank(), "Receive set size"));
   auto count = std::max(elem_hashes.size(), peer_count);
-  if (count == 0) {
-    return;
-  }
   // Step 1. Hashes inputs
   auto hashing = HashInputs(elem_hashes, count);
 
@@ -110,15 +104,15 @@ void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
   std::vector<uint128_t> elems;
   elems.reserve(num_ot);
   size_t oprf_idx = 0;
-  for (auto & bin_idx : hashing) {
+  for (auto& bin_idx : hashing) {
     bin_idx.resize(kBinSize);
     std::sort(bin_idx.begin(), bin_idx.end());
     std::vector<uint64_t> evals(kBinSize);
 
     // Encode inputs before SendCorrection
     // More details could be found in `yacl/kernel/algorithms/kkrt_ote_test.cc`
-    std::transform(bin_idx.cbegin(), bin_idx.cend(),
-                   evals.begin(), [&](uint128_t input) {
+    std::transform(bin_idx.cbegin(), bin_idx.cend(), evals.begin(),
+                   [&](uint128_t input) {
                      uint64_t result;
                      receiver.Encode(
                          oprf_idx, HashToSizeT(input),
@@ -156,6 +150,14 @@ void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
                  yacl::ByteContainerView(ciphers.data(),
                                          ciphers.size() * sizeof(uint128_t)),
                  "Send ciphertexts");
+  yacl::Buffer size_data = ctx->Recv(ctx->PrevRank(), "union size");
+
+  uint32_t z_size = *reinterpret_cast<uint32_t*>(size_data.data());
+  std::vector<uint128_t> psu_result(z_size);
+  auto bufres = ctx->Recv(ctx->PrevRank(), "Receive union");
+  YACL_ENFORCE(bufres.size() == int64_t(z_size * sizeof(uint128_t)));
+  std::memcpy(psu_result.data(), bufres.data(), bufres.size());
+  return psu_result;
 }
 
 std::vector<uint128_t> KrtwPsuRecv(
@@ -185,7 +187,7 @@ std::vector<uint128_t> KrtwPsuRecv(
   yacl::dynamic_bitset<uint128_t> ot_choice(num_ot);
   size_t oprf_idx = 0;
   // Step 3. For each bin, invokes PSU(1, m+1)
-  for (auto & bin_idx : hashing) {
+  for (auto& bin_idx : hashing) {
     sender.RecvCorrection(ctx, kBinSize);
 
     auto bin_size = bin_idx.size();
@@ -194,9 +196,9 @@ std::vector<uint128_t> KrtwPsuRecv(
       std::vector<uint64_t> xs(kBinSize);
       std::vector<uint64_t> ys(kBinSize);
       for (size_t i = 0; i != kBinSize; ++i) {
-        xs[i] = (i < bin_size   ? HashToSizeT(bin_idx[i])
-                 : i > bin_size ? yacl::crypto::FastRandU64()
-                                : kBot);
+        xs[i] =
+            (i < bin_size ? HashToSizeT(bin_idx[i])
+                          : i > bin_size ? yacl::crypto::FastRandU64() : kBot);
         oprf->Eval(oprf_idx, xs[i], reinterpret_cast<uint8_t*>(&ys[i]),
                    sizeof(ys[i]));
         ys[i] ^= seed;
@@ -229,7 +231,15 @@ std::vector<uint128_t> KrtwPsuRecv(
       }
     }
   }
-  return std::vector(set_union.begin(), set_union.end());
+  std::vector<uint128_t> psu_result(set_union.begin(), set_union.end());
+  uint32_t z_size = psu_result.size();
+  std::vector<uint8_t> size_data(
+      reinterpret_cast<uint8_t*>(&z_size),
+      reinterpret_cast<uint8_t*>(&z_size) + sizeof(z_size));
+  ctx->SendAsync(ctx->NextRank(), size_data, "union size");
+  ctx->SendAsync(ctx->NextRank(),
+                 yacl::ByteContainerView(psu_result.data(),
+                                         psu_result.size() * sizeof(uint128_t)),
+                 "Send union");
+  return psu_result;
 }
-
-

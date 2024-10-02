@@ -204,9 +204,9 @@ std::vector<uint128_t> KrtwPsuRecv(
       auto seed = yacl::crypto::FastRandU64();
       std::vector<uint64_t> xs(kBinSize), ys(kBinSize);
       for (size_t i = 0; i != kBinSize; ++i) {
-        xs[i] = (i < bin_size   ? HashToSizeT(hashing[bin_idx][i])
-                 : i > bin_size ? yacl::crypto::FastRandU64()
-                                : kBot);
+        xs[i] =
+            (i < bin_size ? HashToSizeT(hashing[bin_idx][i])
+                          : i > bin_size ? yacl::crypto::FastRandU64() : kBot);
         oprf->Eval(oprf_idx, xs[i], reinterpret_cast<uint8_t*>(&ys[i]),
                    sizeof(ys[i]));
         ys[i] ^= seed;

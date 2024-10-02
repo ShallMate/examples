@@ -12,18 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "examples/okvspoint/baxos.h"
-
-#include <vector>
 #include <iostream>
+#include <vector>
+
+#include "examples/okvspoint/baxos.h"
 #include "spdlog/spdlog.h"
+
 #include "yacl/crypto/rand/rand.h"
 #include "yacl/crypto/tools/prg.h"
 
 namespace okvs {
 
 void RunBaxosTest(size_t items_num) {
-  size_t bin_size = items_num/128;
+  size_t bin_size = items_num / 128;
   size_t weight = 3;
   // statistical security parameter
   size_t ssp = 40;
@@ -50,25 +51,30 @@ void RunBaxosTest(size_t items_num) {
   prng.Fill(absl::MakeSpan(items.data(), items.size()));
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> duration = end - start;
-  std::cout << "Time for prng.Fill(items): " << duration.count() << " seconds" << std::endl;
+  std::cout << "Time for prng.Fill(items): " << duration.count() << " seconds"
+            << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
   prng.Fill(absl::MakeSpan(values.data(), values.size()));
   end = std::chrono::high_resolution_clock::now();
   duration = end - start;
-  std::cout << "Time for prng.Fill(values): " << duration.count() << " seconds" << std::endl;
+  std::cout << "Time for prng.Fill(values): " << duration.count() << " seconds"
+            << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
   baxos.Solve(absl::MakeSpan(items), absl::MakeSpan(values), absl::MakeSpan(p));
   end = std::chrono::high_resolution_clock::now();
   duration = end - start;
-  std::cout << "Time for baxos.Solve: " << duration.count() << " seconds" << std::endl;
+  std::cout << "Time for baxos.Solve: " << duration.count() << " seconds"
+            << std::endl;
 
   start = std::chrono::high_resolution_clock::now();
-  baxos.Decode(absl::MakeSpan(items), absl::MakeSpan(values2), absl::MakeSpan(p));
+  baxos.Decode(absl::MakeSpan(items), absl::MakeSpan(values2),
+               absl::MakeSpan(p));
   end = std::chrono::high_resolution_clock::now();
   duration = end - start;
-  std::cout << "Time for baxos.Decode: " << duration.count() << " seconds" << std::endl;
+  std::cout << "Time for baxos.Decode: " << duration.count() << " seconds"
+            << std::endl;
 
   if (std::memcmp(values2.data(), values.data(),
                   values.size() * sizeof(uint128_t)) != 0) {
@@ -83,78 +89,81 @@ void RunBaxosTest(size_t items_num) {
   std::cout << "Test passed for items_num: " << items_num << std::endl;
 }
 
-void RunPaxostest(){
-    // 选择一种 DenseType 类型
-    auto dt = PaxosParam::DenseType::Binary;
-    SPDLOG_INFO("=== dt:{}", dt == PaxosParam::DenseType::Binary ? "binary" : "gf128");
-    // 设置参数
-    uint64_t n = 1<<20;
-    uint64_t w = 3;
-    uint64_t s = 0;
-    uint64_t t = 1;
+void RunPaxostest() {
+  // 选择一种 DenseType 类型
+  auto dt = PaxosParam::DenseType::Binary;
+  SPDLOG_INFO("=== dt:{}",
+              dt == PaxosParam::DenseType::Binary ? "binary" : "gf128");
+  // 设置参数
+  uint64_t n = 1 << 20;
+  uint64_t w = 3;
+  uint64_t s = 0;
+  uint64_t t = 1;
 
-    // 初始化 Paxos 实例
-    SPDLOG_INFO("=== tt:{} t:{}", 0, t);  // 由于没有循环，所以 tt 固定为 0
-    Paxos<uint32_t> paxos;
-    paxos.Init(n, w, 40, dt, yacl::MakeUint128(0, 0));
+  // 初始化 Paxos 实例
+  SPDLOG_INFO("=== tt:{} t:{}", 0, t);  // 由于没有循环，所以 tt 固定为 0
+  Paxos<uint32_t> paxos;
+  paxos.Init(n, w, 40, dt, yacl::MakeUint128(0, 0));
 
-    // 创建 items 和 values
-    std::vector<uint128_t> items(n);
-    std::vector<uint128_t> values(n);
-    std::vector<uint128_t> values2(n);
-    std::vector<uint128_t> p(paxos.size());
+  // 创建 items 和 values
+  std::vector<uint128_t> items(n);
+  std::vector<uint128_t> values(n);
+  std::vector<uint128_t> values2(n);
+  std::vector<uint128_t> p(paxos.size());
 
-    SPDLOG_INFO("n:{}, paxos.size():{}", n, paxos.size());
+  SPDLOG_INFO("n:{}, paxos.size():{}", n, paxos.size());
 
-    // 生成随机数据
-    yacl::crypto::Prg<uint128_t> prng(yacl::MakeUint128(0, s));
-    prng.Fill(absl::MakeSpan(items.data(), items.size()));
-    prng.Fill(absl::MakeSpan(values.data(), values.size()));
+  // 生成随机数据
+  yacl::crypto::Prg<uint128_t> prng(yacl::MakeUint128(0, s));
+  prng.Fill(absl::MakeSpan(items.data(), items.size()));
+  prng.Fill(absl::MakeSpan(values.data(), values.size()));
 
-    // 设置 Paxos 输入并进行编码解码
-    paxos.SetInput(absl::MakeSpan(items));
+  // 设置 Paxos 输入并进行编码解码
+  paxos.SetInput(absl::MakeSpan(items));
 
-    SPDLOG_INFO("===encode===");
-    paxos.Encode(absl::MakeSpan(values), absl::MakeSpan(p));
-    SPDLOG_INFO("===decode===");
+  SPDLOG_INFO("===encode===");
+  paxos.Encode(absl::MakeSpan(values), absl::MakeSpan(p));
+  SPDLOG_INFO("===decode===");
 
-    auto start = std::chrono::high_resolution_clock::now();
-    paxos.Decode(absl::MakeSpan(items), absl::MakeSpan(values2), absl::MakeSpan(p));
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
-    std::cout << "Time for baxos.Decode: " << duration.count() << " seconds" << std::endl;
+  auto start = std::chrono::high_resolution_clock::now();
+  paxos.Decode(absl::MakeSpan(items), absl::MakeSpan(values2),
+               absl::MakeSpan(p));
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end - start;
+  std::cout << "Time for baxos.Decode: " << duration.count() << " seconds"
+            << std::endl;
 
-    
+  /*
+  // 输出编码后的结果
+  for (size_t i = 0; i < p.size(); ++i) {
+      SPDLOG_INFO("P[{}]:{}", i, (std::ostringstream() <<
+  Galois128(p[i])).str());
+  }
 
-    /*
-    // 输出编码后的结果
-    for (size_t i = 0; i < p.size(); ++i) {
-        SPDLOG_INFO("P[{}]:{}", i, (std::ostringstream() << Galois128(p[i])).str());
-    }
-
-    // 输出解码后的 values 和 values2
-    for (auto &value : values) {
-        SPDLOG_INFO("Original value: {}", (std::ostringstream() << Galois128(value)).str());
-    }
-    for (auto &value : values2) {
-        SPDLOG_INFO("Decoded value: {}", (std::ostringstream() << Galois128(value)).str());
-    }
-    */
-    // 检查是否解码正确
-    if (std::memcmp(values2.data(), values.data(), sizeof(uint128_t) * values.size()) == 0) {
-        std::cout << "Test passed: values match." << std::endl;
-    } else {
-        std::cout << "Test failed: values do not match." << std::endl;
-    }
-    
+  // 输出解码后的 values 和 values2
+  for (auto &value : values) {
+      SPDLOG_INFO("Original value: {}", (std::ostringstream() <<
+  Galois128(value)).str());
+  }
+  for (auto &value : values2) {
+      SPDLOG_INFO("Decoded value: {}", (std::ostringstream() <<
+  Galois128(value)).str());
+  }
+  */
+  // 检查是否解码正确
+  if (std::memcmp(values2.data(), values.data(),
+                  sizeof(uint128_t) * values.size()) == 0) {
+    std::cout << "Test passed: values match." << std::endl;
+  } else {
+    std::cout << "Test failed: values do not match." << std::endl;
+  }
 }
 
-} 
+}  // namespace okvs
 
 int main() {
-
   okvs::RunBaxosTest(1048576);
-  //okvs::RunPaxostest();
-  
+  // okvs::RunPaxostest();
+
   return 0;
 }

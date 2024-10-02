@@ -13,22 +13,21 @@ using namespace yacl::crypto;
 using namespace std;
 
 inline std::vector<int32_t> GetIntersectionIdx(
-    const std::vector<uint128_t> &x, const std::vector<uint128_t> &y) {
-
+    const std::vector<uint128_t>& x, const std::vector<uint128_t>& y) {
   std::set<uint128_t> set(x.begin(), x.end());
   std::vector<int32_t> ret(y.size(), -1);  // 初始化为 -1
 
   yacl::parallel_for(0, y.size(), [&](size_t start, size_t end) {
     for (size_t i = start; i < end; ++i) {
       if (set.count(y[i]) != 0) {
-        ret[i] = i; 
+        ret[i] = i;
       }
     }
   });
 
   // 清除所有值为 -1 的元素
   ret.erase(std::remove(ret.begin(), ret.end(), -1), ret.end());
-  
+
   return ret;
 }
 
@@ -129,7 +128,7 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
 int main() {
   // 确保链接上下文定义正确
   // 准备OKVS的参数
-  const uint64_t num = 1<<24;
+  const uint64_t num = 1 << 24;
   size_t bin_size = num;
   size_t weight = 3;
   // statistical security parameter
@@ -150,9 +149,8 @@ int main() {
 
   std::vector<uint128_t> items_a = CreateRangeItems(0, num);
   std::vector<uint128_t> items_b = CreateRangeItems(10, num);
-  
-  auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
+  auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
@@ -188,6 +186,7 @@ int main() {
             << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
             << std::endl;
   std::cout << "Total Communication: "
-            << bytesToMB(receiver_stats->sent_bytes.load())+bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
-            << std::endl;
+            << bytesToMB(receiver_stats->sent_bytes.load()) +
+                   bytesToMB(receiver_stats->recv_bytes.load())
+            << " MB" << std::endl;
 }

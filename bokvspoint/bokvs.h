@@ -17,71 +17,66 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
-#include <vector>
 #include <cstring>
-#include "yacl/base/int128.h"
-#include "yacl/math/mpint/mp_int.h"
+#include <vector>
+
 #include "c/blake3.h"
 #include "examples/okvs/galois128.h"
 
+#include "yacl/base/int128.h"
+#include "yacl/math/mpint/mp_int.h"
+
 struct Row {
-    int64_t pos;
-    int64_t bpos;
-    std::vector<std::uint8_t> row;
-    uint128_t value;
+  int64_t pos;
+  int64_t bpos;
+  std::vector<std::uint8_t> row;
+  uint128_t value;
 };
 
 inline uint128_t BytesToUint128(std::vector<uint8_t> bytes) {
-    uint128_t value = 0;
-    for (int i = 0; i < 16; ++i) {
-        value = (value << 8) | bytes[i];
-    }
-    return value;
+  uint128_t value = 0;
+  for (int i = 0; i < 16; ++i) {
+    value = (value << 8) | bytes[i];
+  }
+  return value;
 }
 
-
-
 class OKVSBK {
-public:
-    OKVSBK(int64_t n, int64_t w, double e) 
-        : n_(n), m_(std::ceil(n * e)), w_(w), r_(m_ - w), b_(w / 8), e_(e), p_(m_, 0) 
-    {
-    }
+ public:
+  OKVSBK(int64_t n, int64_t w, double e)
+      : n_(n),
+        m_(std::ceil(n * e)),
+        w_(w),
+        r_(m_ - w),
+        b_(w / 8),
+        e_(e),
+        p_(m_, 0) {}
 
-    int64_t getN() const {
-        return n_;
-    }
+  int64_t getN() const { return n_; }
 
-    int64_t getM() const {
-        return m_;
-    }
+  int64_t getM() const { return m_; }
 
-    int64_t getW() const {
-        return w_;
-    }
+  int64_t getW() const { return w_; }
 
-    int64_t getR() const {
-        return r_;
-    }
+  int64_t getR() const { return r_; }
 
-    double getE() const {
-        return e_;
-    }
+  double getE() const { return e_; }
 
-    bool Encode(std::vector<yacl::math::MPInt> keys, std::vector<uint32_t> values);
-    void Decode(std::vector<yacl::math::MPInt> keys, std::vector<uint32_t>& values);
-    void DecodeSingle(std::vector<yacl::math::MPInt> keys, std::vector<uint32_t>& values);
+  bool Encode(std::vector<yacl::math::MPInt> keys,
+              std::vector<uint32_t> values);
+  void Decode(std::vector<yacl::math::MPInt> keys,
+              std::vector<uint32_t>& values);
+  void DecodeSingle(std::vector<yacl::math::MPInt> keys,
+                    std::vector<uint32_t>& values);
 
+ private:
+  int64_t n_;  // okvs存储的k-v长度
+  int64_t m_;  // okvs的实际长度
+  int64_t w_;  // 随机块的长度
+  int64_t r_;  // hashrange
+  int64_t b_;
+  double e_;
 
-
-private:
-    int64_t n_; // okvs存储的k-v长度
-    int64_t m_; // okvs的实际长度
-    int64_t w_; // 随机块的长度
-    int64_t r_; // hashrange
-    int64_t b_;
-    double e_;
-public:
-    std::vector<uint32_t> p_;  // 存储m长度的向量，初始化为0
+ public:
+  std::vector<uint32_t> p_;  // 存储m长度的向量，初始化为0
 };
-

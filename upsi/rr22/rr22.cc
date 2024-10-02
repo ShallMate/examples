@@ -1,9 +1,10 @@
 
+#include "examples/upsi/rr22/rr22.h"
+
 #include <iostream>
 #include <vector>
 
 #include "examples/upsi/rr22/okvs/galois128.h"
-#include "examples/upsi/rr22/rr22.h"
 
 #include "yacl/base/int128.h"
 #include "yacl/kernel/algorithms/silent_vole.h"
@@ -11,28 +12,38 @@
 
 namespace rr22 {
 
-inline std::vector<int32_t> GetIntersectionIdx(
-    const std::vector<uint128_t> &x, const std::vector<uint128_t> &y) {
+std::vector<uint128_t> GetIntersection(std::vector<int32_t> z,
+                                       std::vector<uint128_t> y,
+                                       uint32_t z_size) {
+  std::vector<uint128_t> intersection(z_size);
+  yacl::parallel_for(0, z_size, [&](size_t begin, size_t end) {
+    for (size_t idx = begin; idx < end; ++idx) {
+      intersection[idx] = y[z[idx]];
+    }
+  });
+  return intersection;
+}
 
+inline std::vector<int32_t> GetIntersectionIdx(
+    const std::vector<uint128_t>& x, const std::vector<uint128_t>& y) {
   std::set<uint128_t> set(x.begin(), x.end());
   std::vector<int32_t> ret(y.size(), -1);  // 初始化为 -1
 
   yacl::parallel_for(0, y.size(), [&](size_t start, size_t end) {
     for (size_t i = start; i < end; ++i) {
       if (set.count(y[i]) != 0) {
-        ret[i] = i; 
+        ret[i] = i;
       }
     }
   });
 
   // 清除所有值为 -1 的元素
   ret.erase(std::remove(ret.begin(), ret.end(), -1), ret.end());
-  
+
   return ret;
 }
 
-
-std::vector<int32_t> RR22PsiRecv(
+std::vector<uint128_t> RR22PsiRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
     std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
   uint128_t okvssize = baxos.size();
@@ -75,11 +86,23 @@ std::vector<int32_t> RR22PsiRecv(
   std::memcpy(sendermasks.data(), buf.data(), buf.size());
 
   auto z = GetIntersectionIdx(sendermasks, receivermasks);
-  return z;
+  uint32_t z_size = z.size();
+  std::vector<uint8_t> size_data(
+      reinterpret_cast<uint8_t*>(&z_size),
+      reinterpret_cast<uint8_t*>(&z_size) + sizeof(z_size));
+  ctx->SendAsync(ctx->NextRank(), size_data, "intersection size");
+  auto psi_result = GetIntersection(z, elem_hashes, z.size());
+
+  ctx->SendAsync(ctx->NextRank(),
+                 yacl::ByteContainerView(psi_result.data(),
+                                         psi_result.size() * sizeof(uint128_t)),
+                 "Send intersection");
+  return psi_result;
 }
 
-void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
+std::vector<uint128_t> RR22PsiSend(
+    const std::shared_ptr<yacl::link::Context>& ctx,
+    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
   size_t okvssize =
       DeserializeUint128(ctx->Recv(ctx->PrevRank(), "baxos.size"));
   const auto codetype = yacl::crypto::CodeType::Silver5;
@@ -116,6 +139,15 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
       yacl::ByteContainerView(sendermasks.data(),
                               sendermasks.size() * sizeof(uint128_t)),
       "Send masks of sender");
+  yacl::Buffer size_data = ctx->Recv(ctx->PrevRank(), "intersection size");
+
+  uint32_t z_size = *reinterpret_cast<uint32_t*>(size_data.data());
+  std::vector<uint128_t> intersection(z_size);
+  auto bufintersection = ctx->Recv(ctx->PrevRank(), "Receive intersection");
+  YACL_ENFORCE(bufintersection.size() == int64_t(z_size * sizeof(uint128_t)));
+  std::memcpy(intersection.data(), bufintersection.data(),
+              bufintersection.size());
+  return intersection;
 }
 
-}
+}  // namespace rr22

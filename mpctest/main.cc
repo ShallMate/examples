@@ -1,11 +1,11 @@
-#include "examples/mpctest/mpc19_psu.h"
-
 #include <algorithm>
 #include <future>
 #include <iostream>
 #include <set>
 #include <string>
 #include <vector>
+
+#include "examples/mpctest/mpc19_psu.h"
 
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/link/test_util.h"
@@ -21,24 +21,22 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   const int kWorldSize = 2;
   auto contexts = yacl::link::test::SetupWorld(kWorldSize);
-  auto n = 1<<14;
+  auto n = 1 << 14;
   std::vector<uint128_t> items_a = CreateRangeItems(0, n);
   std::vector<uint128_t> items_b = CreateRangeItems(1, n);
 
-  std::future<void> krtwpsu_sender = std::async(std::launch::async, [&] {
-    KrtwPsuSend(contexts[0], items_a);
-  });
+  std::future<void> krtwpsu_sender = std::async(
+      std::launch::async, [&] { KrtwPsuSend(contexts[0], items_a); });
 
-  std::future<std::vector<uint128_t>> krtwpsu_receiver = std::async(std::launch::async, [&] {
-    return KrtwPsuRecv(contexts[1], items_b);
-  });
+  std::future<std::vector<uint128_t>> krtwpsu_receiver = std::async(
+      std::launch::async, [&] { return KrtwPsuRecv(contexts[1], items_b); });
 
   krtwpsu_sender.get();
   auto psu_result = krtwpsu_receiver.get();
   std::sort(psu_result.begin(), psu_result.end());
 
   std::set<uint128_t> union_set;
-  union_set.insert(items_a.begin(),items_a.end());
+  union_set.insert(items_a.begin(), items_a.end());
   union_set.insert(items_b.begin(), items_b.end());
   std::vector<uint128_t> union_vec(union_set.begin(), union_set.end());
 
@@ -64,9 +62,15 @@ int main() {
     return static_cast<double>(bytes) / (1024 * 1024);
   };
 
-  std::cout << "Sender sent bytes: " << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
-  std::cout << "Sender received bytes: " << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
-  std::cout << "Receiver sent bytes: " << bytesToMB(receiver_stats->sent_bytes.load()) << " MB" << std::endl;
-  std::cout << "Receiver received bytes: " << bytesToMB(receiver_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Sender sent bytes: "
+            << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Sender received bytes: "
+            << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Receiver sent bytes: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Receiver received bytes: "
+            << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
   return 0;
 }

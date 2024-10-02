@@ -19,7 +19,6 @@
 #include <ostream>
 
 #include "absl/types/span.h"
-
 #include "examples/upsi/rr22/okvs/dense_mtx.h"
 #include "examples/upsi/rr22/okvs/galois128.h"
 #include "examples/upsi/rr22/okvs/paxos.h"

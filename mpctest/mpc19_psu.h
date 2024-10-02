@@ -7,11 +7,8 @@
 #include "yacl/link/context.h"
 #include "yacl/secparam.h"
 
-
 /* security parameter declaration */
 YACL_MODULE_DECLARE("mpc19_psu", SecParam::C::k128, SecParam::S::k40);
-
-
 
 uint64_t Evaluate(const std::vector<uint64_t>& coeffs, uint64_t x);
 
@@ -27,5 +24,3 @@ void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
 std::vector<uint128_t> KrtwPsuRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
     const std::vector<uint128_t>& elem_hashes);
-
-  

@@ -32,11 +32,11 @@ void PaxosHash<IdxType>::mod32(uint64_t* vals, uint64_t mod_idx) const {
 template <typename IdxType>
 void PaxosHash<IdxType>::BuildRow32(const absl::Span<uint128_t> hash,
                                     absl::Span<IdxType> rows) const {
-    auto rows_ptr = rows.data();
-    for (uint64_t k = 0; k < 32; ++k) {
-      BuildRow(hash[k], absl::MakeSpan(rows_ptr, weight));
-      rows_ptr += weight;
-    }
+  auto rows_ptr = rows.data();
+  for (uint64_t k = 0; k < 32; ++k) {
+    BuildRow(hash[k], absl::MakeSpan(rows_ptr, weight));
+    rows_ptr += weight;
+  }
 }
 
 template <typename IdxType>

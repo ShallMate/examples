@@ -17,13 +17,12 @@
 #include <vector>
 
 #include "spdlog/spdlog.h"
+
 #include "yacl/utils/parallel.h"
 
 namespace okvs {
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 void AesCrHash::Hash(absl::Span<const uint8_t> plaintext,
                      absl::Span<uint8_t> ciphertext) const {

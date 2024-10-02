@@ -18,12 +18,16 @@ package(default_visibility = ["//visibility:public"])
 
 cc_binary(
     name = "upsi",
-    srcs = ["main.cc"],
+    srcs = [
+            "main.cc",
+            "upsi.h",
+            "upsi.cc"
+            ],
     deps = [
         "//yacl/link",
         "//examples/upsi/rr22/okvs:baxos",
         "//examples/upsi/rr22:rr22",
-        "//examples/upsi/psu:mpc19_psu",
+        "//examples/upsi/psu:psu",
         "//examples/upsi/ecdhpsi:ecdh_psi",
     ],
     copts = ["-maes", "-mpclmul"],
