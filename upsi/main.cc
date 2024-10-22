@@ -1,3 +1,17 @@
+// Copyright 2024 Guowei LING.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -93,9 +107,12 @@ void RunRR22() {
 }
 
 void RunUPSI() {
-  const uint64_t num = 1 << 22;
-  const uint64_t addnum = 1 << 10;
-  const uint64_t subnum = 1 << 10;
+  const uint64_t num = 1 << 20;
+  const uint64_t addnum = 1 << 8;
+  const uint64_t subnum = 1 << 8;
+  SPDLOG_INFO("|X| = |Y|: {}", num);
+  SPDLOG_INFO("|X^+| = |Y^+|: {}", addnum);
+  SPDLOG_INFO("|X^-| = |Y^-|: {}", subnum);
   size_t bin_size = num;
   size_t weight = 3;
   size_t ssp = 40;
@@ -115,7 +132,16 @@ void RunUPSI() {
   std::vector<uint128_t> Yadd = CreateRangeItems(0, addnum);
   std::vector<uint128_t> Xsub = CreateRangeItems(num - subnum, subnum);
   std::vector<uint128_t> Ysub = CreateRangeItems(num - subnum, subnum);
-
+  auto start_time = std::chrono::high_resolution_clock::now();
+  EcdhReceiver yaddreceiver;
+  EcdhSender yaddsender;
+  yaddsender.UpdatePRFs(absl::MakeSpan(X));
+  EcdhReceiver xaddreceiver;
+  EcdhSender xaddsender;
+  xaddsender.UpdatePRFs(absl::MakeSpan(Y));
+  auto end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end_time - start_time;
+  std::cout << "Setup time: " << duration.count() << " seconds" << std::endl;
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
   auto start_time_base = std::chrono::high_resolution_clock::now();
   std::future<std::vector<uint128_t>> rr22_sender = std::async(
@@ -132,6 +158,7 @@ void RunUPSI() {
                                           psi_result_sender.end());
   std::set<uint128_t> intersection_receiver(psi_result.begin(),
                                             psi_result.end());
+  std::cout<<"Base PSI intersection size = "<<intersection_receiver.size()<<std::endl;
   if (intersection_sender == intersection_receiver) {
     std::cout << "The base PSI finish." << std::endl;
   } else {
@@ -161,16 +188,7 @@ void RunUPSI() {
   size_t c2 = sender_stats->recv_bytes.load();
   size_t c3 = receiver_stats->sent_bytes.load();
   size_t c4 = receiver_stats->recv_bytes.load();
-  auto start_time = std::chrono::high_resolution_clock::now();
-  EcdhReceiver yaddreceiver;
-  EcdhSender yaddsender;
-  yaddsender.UpdatePRFs(absl::MakeSpan(X));
-  EcdhReceiver xaddreceiver;
-  EcdhSender xaddsender;
-  xaddsender.UpdatePRFs(absl::MakeSpan(Y));
-  auto end_time = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> duration = end_time - start_time;
-  std::cout << "Setup time: " << duration.count() << " seconds" << std::endl;
+
 
   auto newlctxs = yacl::link::test::SetupWorld(2);  // setup network
   // newlctxs[0]->ResetStats();
@@ -324,7 +342,7 @@ int RunEcdhPsi() {
 
 int RunAEcdhPsi() {
   size_t s_n = 1 << 19;
-  size_t r_n = 1 << 10;
+  size_t r_n = 1 << 2;
   auto x = CreateRangeItems(200, s_n);
   // auto xadd = CreateRangeItems(100, 100);
   auto y = CreateRangeItems(100, r_n);
@@ -369,9 +387,7 @@ int RunAEcdhPsi() {
 }
 
 int main() {
-  // RunAEcdhPsi();
-  // RunRR22();
-  // RunPSU();
   RunUPSI();
-  // RunAEcdhPsi();
+  //RunAEcdhPsi();
+  
 }

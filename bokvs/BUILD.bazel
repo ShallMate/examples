@@ -31,5 +31,5 @@ yacl_cc_binary(
     "//yacl/utils:parallel",
     "//yacl/crypto/hash:hash_utils"
     ],
-    copts = ["-maes", "-mpclmul"],
+    copts = ["-maes", "-mpclmul","-mavx2"],
 )

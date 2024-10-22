@@ -1,3 +1,17 @@
+// Copyright 2024 Guowei LING.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "examples/upsi/upsi.h"
 
 #include <cstdint>
@@ -45,8 +59,11 @@ std::vector<uint128_t> UPsiRecv(const std::shared_ptr<yacl::link::Context>& ctx,
   // cout << "yadd_size = " << yadd_size << endl;
   yaddsender.EcdhPsiSend(ctx, yadd_size);
   std::vector<uint128_t> t = xaddreceiver.EcdhPsiRecv(ctx, xadd);
+  //cout << "t=" << t.size() << endl;
 
   std::vector<uint128_t> u = KrtwPsuSend(ctx, t);
+  //cout << "u=" << u.size() << endl;
+
   std::set<uint128_t> xsubset(xsub.begin(), xsub.end());
   std::set<uint128_t> xsubsetintersction;
   std::set_intersection(
@@ -57,7 +74,7 @@ std::vector<uint128_t> UPsiRecv(const std::shared_ptr<yacl::link::Context>& ctx,
                                          xsubsetintersction.end());
 
   std::vector<uint128_t> w = KrtwPsuSend(ctx, xsubintersction);
-  // cout << "w=" << w.size() << endl;
+  //cout << "w=" << w.size() << endl;
   std::set<uint128_t> wset(w.begin(), w.end());
 
   // 求 I \ W (差集)
@@ -89,10 +106,12 @@ std::vector<uint128_t> UPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
   yacl::Buffer size_data_xadd = ctx->Recv(ctx->PrevRank(), "xadd size");
   uint32_t xadd_size = *reinterpret_cast<uint32_t*>(size_data_xadd.data());
   std::vector<uint128_t> v = yaddreceiver.EcdhPsiRecv(ctx, yadd);
+  //cout << "v = " << v.size() << endl;
 
   xaddsender.EcdhPsiSend(ctx, xadd_size);
   std::vector<uint128_t> u = KrtwPsuRecv(ctx, v);
-  // cout << "u = " << u.size() << endl;
+  //cout << "u = " << u.size() << endl;
+
   std::set<uint128_t> ysubset(ysub.begin(), ysub.end());
   std::set<uint128_t> ysubsetintersction;
   std::set_intersection(
@@ -103,7 +122,7 @@ std::vector<uint128_t> UPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
                                          ysubsetintersction.end());
   // cout << ysubintersction.size() << endl;
   std::vector<uint128_t> w = KrtwPsuRecv(ctx, ysubintersction);
-  // cout<<w.size()<<endl;
+  //cout<<w.size()<<endl;
   std::set<uint128_t> wset(w.begin(), w.end());
   // 求 I \ W (差集)
   std::set<uint128_t> diff;

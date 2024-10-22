@@ -8,6 +8,7 @@
 #include <iterator>
 #include <ostream>
 #include <vector>
+#include <immintrin.h>
 
 #include "examples/okvs/galois128.h"
 
