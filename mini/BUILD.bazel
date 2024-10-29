@@ -3,11 +3,13 @@ load("//bazel:yacl.bzl", "yacl_cc_binary")
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_binary(
-    name = "kkrt_example",
+    name = "mini_example",
     srcs = [
-        "main.cc",
-        "kkrt_psi.cc",
-        "kkrt_psi.h"
+        "mini_psi.cc",
+        "mini_psi.h",
+        "polynomial.cc",
+        "polynomial.h",
+        "main.cc"
     ],
     deps = [
         "//yacl/kernel/algorithms:kkrt_ote",
@@ -19,4 +21,6 @@ yacl_cc_binary(
         "//yacl/base:exception",          # 异常处理支持
     ],
     copts = ["-maes", "-mpclmul"],
+    linkopts = ["-L/usr/local/lib", "-lcurve25519"],  # 指定库路径和库名称
+    includes = ["/usr/local/include"],                # 指定头文
 )

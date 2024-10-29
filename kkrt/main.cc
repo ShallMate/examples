@@ -20,7 +20,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 
 int main() {
  
-    size_t n = 1<<20;
+    size_t n = 1<<24;
     auto alice_items = CreateRangeItems(1, n);
     auto bob_items = CreateRangeItems(2, n);
     auto contexts = yacl::link::test::SetupWorld(2);
