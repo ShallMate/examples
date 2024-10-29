@@ -1,0 +1,22 @@
+load("//bazel:yacl.bzl", "yacl_cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+yacl_cc_binary(
+    name = "kkrt_example",
+    srcs = [
+        "main.cc",
+        "kkrt_psi.cc",
+        "kkrt_psi.h"
+    ],
+    deps = [
+        "//yacl/kernel/algorithms:kkrt_ote",
+        "//yacl/kernel/algorithms:base_ot",
+        "//yacl/kernel/algorithms:iknp_ote",
+        "//yacl/utils:cuckoo_index",
+        "//yacl/link:test_util",
+        "//yacl/base:int128",            # 包含 uint128_t 支持
+        "//yacl/base:exception"          # 异常处理支持
+    ],
+    copts = ["-maes", "-mpclmul"],
+)
