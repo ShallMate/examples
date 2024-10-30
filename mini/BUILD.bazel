@@ -20,7 +20,6 @@ yacl_cc_binary(
         "//yacl/base:int128",            # 包含 uint128_t 支持
         "//yacl/base:exception",          # 异常处理支持
     ],
-    copts = ["-maes", "-mpclmul"],
+    copts = ["-maes", "-mpclmul", "-I/usr/local/include"],  # 添加 include 路径到 copts
     linkopts = ["-L/usr/local/lib", "-lcurve25519"],  # 指定库路径和库名称
-    includes = ["/usr/local/include"],                # 指定头文
 )

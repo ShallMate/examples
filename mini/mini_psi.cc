@@ -15,16 +15,11 @@
 #include "examples/mini/mini_psi.h"
 
 #include <future>
-#include <map>
-#include <random>
-#include <set>
 #include <unordered_set>
 
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "omp.h"
-#include "openssl/crypto.h"
-#include "openssl/rand.h"
 #include "spdlog/spdlog.h"
 
 extern "C" {
@@ -38,7 +33,6 @@ extern "C" {
 #include "yacl/utils/parallel.h"
 
 #include "examples/mini/polynomial.h"
-#include "yacl/utils/cuckoo_index.h"
 
 struct PsiDataBatch {
   uint32_t item_num = 0;

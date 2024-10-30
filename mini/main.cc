@@ -1,12 +1,9 @@
-#include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/link/test_util.h"
 #include "examples/mini/mini_psi.h"
 #include <iostream>
 #include <vector>
 
 
-#include "yacl/base/int128.h"
-#include "yacl/link/test_util.h"
 
 
 std::vector<std::string> CreateRangeItems(size_t begin, size_t size) {

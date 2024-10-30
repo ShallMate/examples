@@ -6,7 +6,6 @@
 
 
 #include "yacl/base/int128.h"
-#include "yacl/link/test_util.h"
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   std::vector<uint128_t> ret(size);
