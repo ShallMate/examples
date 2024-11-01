@@ -1,5 +1,7 @@
 #include "examples/kkrt/kkrt_psi.h"
 
+#include <cstdint>
+#include <cstring>
 #include <future>
 #include <numeric>
 #include <string>
@@ -8,6 +10,7 @@
 #include "openssl/crypto.h"
 #include "openssl/rand.h"
 #include "spdlog/spdlog.h"
+
 #include "yacl/base/exception.h"
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/crypto/rand/rand.h"
@@ -16,11 +19,6 @@
 #include "yacl/kernel/algorithms/iknp_ote.h"
 #include "yacl/kernel/algorithms/kkrt_ote.h"
 #include "yacl/utils/cuckoo_index.h"
-
-
-#include <string>
-#include <cstring>
-#include <cstdint>
 
 struct PsiDataBatch {
   uint32_t item_num = 0;
@@ -34,15 +32,18 @@ struct PsiDataBatch {
     std::string serialized_data;
 
     // 序列化 item_num
-    serialized_data.append(reinterpret_cast<const char*>(&item_num), sizeof(item_num));
+    serialized_data.append(reinterpret_cast<const char*>(&item_num),
+                           sizeof(item_num));
 
     // 序列化 flatten_bytes 的长度和内容
     uint32_t flatten_bytes_size = flatten_bytes.size();
-    serialized_data.append(reinterpret_cast<const char*>(&flatten_bytes_size), sizeof(flatten_bytes_size));
+    serialized_data.append(reinterpret_cast<const char*>(&flatten_bytes_size),
+                           sizeof(flatten_bytes_size));
     serialized_data.append(flatten_bytes);
 
     // 序列化 is_last_batch
-    serialized_data.append(reinterpret_cast<const char*>(&is_last_batch), sizeof(is_last_batch));
+    serialized_data.append(reinterpret_cast<const char*>(&is_last_batch),
+                           sizeof(is_last_batch));
 
     return serialized_data;
   }
@@ -60,19 +61,22 @@ struct PsiDataBatch {
     std::string serialized_data(buffer_data.begin(), buffer_data.end());
 
     // 反序列化 item_num
-    std::memcpy(&batch.item_num, serialized_data.data() + offset, sizeof(batch.item_num));
+    std::memcpy(&batch.item_num, serialized_data.data() + offset,
+                sizeof(batch.item_num));
     offset += sizeof(batch.item_num);
 
     // 反序列化 flatten_bytes 的长度和内容
     uint32_t flatten_bytes_size;
-    std::memcpy(&flatten_bytes_size, serialized_data.data() + offset, sizeof(flatten_bytes_size));
+    std::memcpy(&flatten_bytes_size, serialized_data.data() + offset,
+                sizeof(flatten_bytes_size));
     offset += sizeof(flatten_bytes_size);
 
     batch.flatten_bytes = serialized_data.substr(offset, flatten_bytes_size);
     offset += flatten_bytes_size;
 
     // 反序列化 is_last_batch
-    std::memcpy(&batch.is_last_batch, serialized_data.data() + offset, sizeof(batch.is_last_batch));
+    std::memcpy(&batch.is_last_batch, serialized_data.data() + offset,
+                sizeof(batch.is_last_batch));
 
     return batch;
   }
@@ -97,12 +101,13 @@ size_t ExchangeSetSize(const std::shared_ptr<yacl::link::Context>& link_ctx,
 
   // 发送字节数组
   link_ctx->SendAsyncThrottled(
-      link_ctx->NextRank(), std::string(serialized_input_size.begin(), serialized_input_size.end()),
+      link_ctx->NextRank(),
+      std::string(serialized_input_size.begin(), serialized_input_size.end()),
       fmt::format("KKRT:PSI:SELF_SIZE={}", items_size));
 
   // 接收字节数组
-  auto received_buffer = link_ctx->Recv(
-      link_ctx->NextRank(), fmt::format("KKRT:PSI:PEER_SIZE"));
+  auto received_buffer =
+      link_ctx->Recv(link_ctx->NextRank(), fmt::format("KKRT:PSI:PEER_SIZE"));
 
   // 将接收到的字节数组反序列化为 size_t 类型
   size_t peer_size;
@@ -121,8 +126,6 @@ inline uint64_t KkrtEncodeSize(uint64_t stat_sec_param, uint128_t self_size,
       (stat_sec_param + std::log2l(self_size * peer_size) + 7) / 8;
   return std::min(encode_size, static_cast<uint64_t>(sizeof(uint128_t)));
 }
-
-
 
 KkrtPsiOptions GetDefaultKkrtPsiOptions() {
   KkrtPsiOptions kkrt_psi_options;
@@ -465,5 +468,3 @@ std::vector<std::size_t> KkrtPsiRecv(
 
   return ret_intersection;
 }
-
-

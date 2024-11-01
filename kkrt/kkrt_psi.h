@@ -10,7 +10,6 @@
 #include "yacl/kernel/type/ot_store.h"
 #include "yacl/link/link.h"
 
-
 struct KkrtPsiOptions {
   // batch size the receiver send corrections
   size_t ot_batch_size = 128;
@@ -46,15 +45,14 @@ void KkrtPsiSend(const std::shared_ptr<yacl::link::Context>& link_ctx,
 
 std::vector<std::size_t> KkrtPsiRecv(
     const std::shared_ptr<yacl::link::Context>& link_ctx,
-    const KkrtPsiOptions& kkrt_psi_options,
-    yacl::crypto::OtSendStore& ot_send,
+    const KkrtPsiOptions& kkrt_psi_options, yacl::crypto::OtSendStore& ot_send,
     const std::vector<uint128_t>& items_hash);
 
 // inline functions
 inline void KkrtPsiSend(const std::shared_ptr<yacl::link::Context>& link_ctx,
                         const std::vector<uint128_t>& items_hash) {
   KkrtPsiOptions kkrt_psi_options = GetDefaultKkrtPsiOptions();
-  
+
   // 创建 OtRecvStore 实例，而非使用智能指针
   yacl::crypto::OtRecvStore ot_recv = GetKkrtOtSenderOptions(link_ctx, 512);
 
@@ -66,11 +64,10 @@ inline std::vector<std::size_t> KkrtPsiRecv(
     const std::shared_ptr<yacl::link::Context>& link_ctx,
     const std::vector<uint128_t>& items_hash) {
   KkrtPsiOptions kkrt_psi_options = GetDefaultKkrtPsiOptions();
-  
+
   // 创建 OtSendStore 实例，而非使用智能指针
   yacl::crypto::OtSendStore ot_send = GetKkrtOtReceiverOptions(link_ctx, 512);
 
   // 调用带选项的 KkrtPsiRecv
   return KkrtPsiRecv(link_ctx, kkrt_psi_options, ot_send, items_hash);
 }
-

@@ -15,24 +15,30 @@
 #include "examples/mini/mini_psi.h"
 
 #include <future>
+#include <map>
+#include <random>
+#include <set>
 #include <unordered_set>
 
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "omp.h"
+#include "openssl/crypto.h"
+#include "openssl/rand.h"
 #include "spdlog/spdlog.h"
 
 extern "C" {
 #include "curve25519.h"
 }
 
+#include "examples/mini/polynomial.h"
+
 #include "yacl/base/exception.h"
 #include "yacl/crypto/block_cipher/symmetric_crypto.h"
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/crypto/tools/prg.h"
+#include "yacl/utils/cuckoo_index.h"
 #include "yacl/utils/parallel.h"
-
-#include "examples/mini/polynomial.h"
 
 struct PsiDataBatch {
   uint32_t item_num = 0;
@@ -46,15 +52,18 @@ struct PsiDataBatch {
     std::string serialized_data;
 
     // 序列化 item_num
-    serialized_data.append(reinterpret_cast<const char*>(&item_num), sizeof(item_num));
+    serialized_data.append(reinterpret_cast<const char*>(&item_num),
+                           sizeof(item_num));
 
     // 序列化 flatten_bytes 的长度和内容
     uint32_t flatten_bytes_size = flatten_bytes.size();
-    serialized_data.append(reinterpret_cast<const char*>(&flatten_bytes_size), sizeof(flatten_bytes_size));
+    serialized_data.append(reinterpret_cast<const char*>(&flatten_bytes_size),
+                           sizeof(flatten_bytes_size));
     serialized_data.append(flatten_bytes);
 
     // 序列化 is_last_batch
-    serialized_data.append(reinterpret_cast<const char*>(&is_last_batch), sizeof(is_last_batch));
+    serialized_data.append(reinterpret_cast<const char*>(&is_last_batch),
+                           sizeof(is_last_batch));
 
     return serialized_data;
   }
@@ -72,19 +81,22 @@ struct PsiDataBatch {
     std::string serialized_data(buffer_data.begin(), buffer_data.end());
 
     // 反序列化 item_num
-    std::memcpy(&batch.item_num, serialized_data.data() + offset, sizeof(batch.item_num));
+    std::memcpy(&batch.item_num, serialized_data.data() + offset,
+                sizeof(batch.item_num));
     offset += sizeof(batch.item_num);
 
     // 反序列化 flatten_bytes 的长度和内容
     uint32_t flatten_bytes_size;
-    std::memcpy(&flatten_bytes_size, serialized_data.data() + offset, sizeof(flatten_bytes_size));
+    std::memcpy(&flatten_bytes_size, serialized_data.data() + offset,
+                sizeof(flatten_bytes_size));
     offset += sizeof(flatten_bytes_size);
 
     batch.flatten_bytes = serialized_data.substr(offset, flatten_bytes_size);
     offset += flatten_bytes_size;
 
     // 反序列化 is_last_batch
-    std::memcpy(&batch.is_last_batch, serialized_data.data() + offset, sizeof(batch.is_last_batch));
+    std::memcpy(&batch.is_last_batch, serialized_data.data() + offset,
+                sizeof(batch.is_last_batch));
 
     return batch;
   }
@@ -110,9 +122,6 @@ constexpr uint32_t kLinkRecvTimeout = 30 * 60 * 1000;
 // first prime over 2^256, used as module for polynomial interpolate
 std::string kPrimeOver256bHexStr =
     "010000000000000000000000000000000000000000000000000000000000000129";
-
-
-
 
 std::vector<std::string> HashInputs(const std::vector<std::string>& items) {
   std::vector<std::string> ret(items.size());
@@ -178,7 +187,7 @@ struct MiniPsiSendCtx {
 
     yacl::parallel_for(0, items.size(), [&](int64_t begin, int64_t end) {
       for (int64_t idx = begin; idx < end; ++idx) {
-        polynomial_eval_values[idx] = ::psi::mini_psi::EvalPolynomial(
+        polynomial_eval_values[idx] = ::EvalPolynomial(
             polynomial_coeff, absl::string_view(items_hash[idx]), prime256_str);
 
         std::array<uint8_t, kKeySize> ideal_permutation;
@@ -209,40 +218,40 @@ struct MiniPsiSendCtx {
   }
 
   void SendMaskedEvalValues(
-    const std::shared_ptr<yacl::link::Context>& link_ctx) {
-  size_t batch_count = 0;
+      const std::shared_ptr<yacl::link::Context>& link_ctx) {
+    size_t batch_count = 0;
 
-  // 直接按批次大小处理 masked_values
-  size_t total_size = masked_values.size();
-  size_t batch_size = kEcdhPsiBatchSize;
+    // 直接按批次大小处理 masked_values
+    size_t total_size = masked_values.size();
+    size_t batch_size = kEcdhPsiBatchSize;
 
-  for (size_t start = 0; start < total_size; start += batch_size) {
-    PsiDataBatch batch;
+    for (size_t start = 0; start < total_size; start += batch_size) {
+      PsiDataBatch batch;
 
-    // 计算当前批次的结束位置
-    size_t end = std::min(start + batch_size, total_size);
+      // 计算当前批次的结束位置
+      size_t end = std::min(start + batch_size, total_size);
 
-    // 检查是否是最后一批
-    batch.is_last_batch = (end == total_size);
+      // 检查是否是最后一批
+      batch.is_last_batch = (end == total_size);
 
-    // 批次数据添加到 batch.flatten_bytes 中
-    batch.flatten_bytes.reserve((end - start) * kFinalCompareBytes);
-    for (size_t i = start; i < end; i++) {
-      batch.flatten_bytes.append(masked_values[i]);
+      // 批次数据添加到 batch.flatten_bytes 中
+      batch.flatten_bytes.reserve((end - start) * kFinalCompareBytes);
+      for (size_t i = start; i < end; i++) {
+        batch.flatten_bytes.append(masked_values[i]);
+      }
+
+      // 发送批次数据
+      const auto tag = fmt::format("MINI-PSI:X^A:{}", batch_count);
+      link_ctx->SendAsyncThrottled(link_ctx->NextRank(), batch.Serialize(),
+                                   tag);
+
+      if (batch.is_last_batch) {
+        SPDLOG_INFO("Last batch triggered, batch_count={}", batch_count);
+        break;
+      }
+      batch_count++;
     }
-
-    // 发送批次数据
-    const auto tag = fmt::format("MINI-PSI:X^A:{}", batch_count);
-    link_ctx->SendAsyncThrottled(link_ctx->NextRank(), batch.Serialize(), tag);
-
-    if (batch.is_last_batch) {
-      SPDLOG_INFO("Last batch triggered, batch_count={}", batch_count);
-      break;
-    }
-    batch_count++;
   }
-  }
-
 
   // key
   std::array<uint8_t, kKeySize> private_key;
@@ -307,45 +316,44 @@ struct MiniPsiRecvCtx {
 
     // ToDo: now use newton Polynomial Interpolation, need optimize to fft
     //
-    polynomial_coeff =
-        ::psi::mini_psi::InterpolatePolynomial(poly_x, poly_y, prime256_str);
+    polynomial_coeff = ::InterpolatePolynomial(poly_x, poly_y, prime256_str);
   }
 
   void SendPolynomialCoeff(
-    const std::shared_ptr<yacl::link::Context>& link_ctx) {
-  size_t batch_count = 0;
+      const std::shared_ptr<yacl::link::Context>& link_ctx) {
+    size_t batch_count = 0;
 
-  // 获取总大小和每批次的大小
-  size_t total_size = polynomial_coeff.size();
-  size_t batch_size = kEcdhPsiBatchSize;
+    // 获取总大小和每批次的大小
+    size_t total_size = polynomial_coeff.size();
+    size_t batch_size = kEcdhPsiBatchSize;
 
-  for (size_t start = 0; start < total_size; start += batch_size) {
-    PsiDataBatch batch;
+    for (size_t start = 0; start < total_size; start += batch_size) {
+      PsiDataBatch batch;
 
-    // 计算当前批次的结束位置
-    size_t end = std::min(start + batch_size, total_size);
+      // 计算当前批次的结束位置
+      size_t end = std::min(start + batch_size, total_size);
 
-    // 判断是否为最后一批
-    batch.is_last_batch = (end == total_size);
+      // 判断是否为最后一批
+      batch.is_last_batch = (end == total_size);
 
-    // 预分配空间并将当前批次数据添加到 batch.flatten_bytes 中
-    batch.flatten_bytes.reserve((end - start) * kHashSize);
-    for (size_t i = start; i < end; i++) {
-      batch.flatten_bytes.append(polynomial_coeff[i]);
+      // 预分配空间并将当前批次数据添加到 batch.flatten_bytes 中
+      batch.flatten_bytes.reserve((end - start) * kHashSize);
+      for (size_t i = start; i < end; i++) {
+        batch.flatten_bytes.append(polynomial_coeff[i]);
+      }
+
+      // 发送当前批次
+      const auto tag = fmt::format("MINI-PSI:X^A:{}", batch_count);
+      link_ctx->SendAsyncThrottled(link_ctx->NextRank(), batch.Serialize(),
+                                   tag);
+
+      if (batch.is_last_batch) {
+        SPDLOG_INFO("Last batch triggered, batch_count={}", batch_count);
+        break;
+      }
+      batch_count++;
     }
-
-    // 发送当前批次
-    const auto tag = fmt::format("MINI-PSI:X^A:{}", batch_count);
-    link_ctx->SendAsyncThrottled(link_ctx->NextRank(), batch.Serialize(), tag);
-
-    if (batch.is_last_batch) {
-      SPDLOG_INFO("Last batch triggered, batch_count={}", batch_count);
-      break;
-    }
-    batch_count++;
   }
-  }
-
 
   void RecvMaskedEvalValues(
       const std::shared_ptr<yacl::link::Context>& link_ctx) {
@@ -435,8 +443,6 @@ struct MiniPsiRecvCtx {
   std::shared_ptr<yacl::crypto::SymmetricCrypto> aes_ecb;
 };
 
-
-
 // #define DEBUG_OUT
 
 void MiniPsiSend(const std::shared_ptr<yacl::link::Context>& link_ctx,
@@ -508,4 +514,3 @@ std::vector<std::string> MiniPsiRecv(
   // get intersection
   return recv_ctx.GetIntersection(items);
 }
-

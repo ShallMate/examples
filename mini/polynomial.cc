@@ -18,11 +18,9 @@
 #include <memory>
 
 #include "openssl/bn.h"
+
 #include "yacl/base/exception.h"
 
-namespace psi::mini_psi {
-
-namespace {
 class BNDeleter {
  public:
   void operator()(BIGNUM *bn) { BN_free(bn); }
@@ -68,7 +66,6 @@ std::vector<BigNumPtr> GetBigNumPtrVector(
 
   return res;
 }
-}  // namespace
 
 std::string EvalPolynomial(const std::vector<absl::string_view> &coeff,
                            absl::string_view poly_x, std::string_view p_str) {
@@ -236,5 +233,3 @@ std::vector<std::string> InterpolatePolynomial(
 
   return res;
 }
-
-}  // namespace psi::mini_psi

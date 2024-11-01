@@ -1,6 +1,9 @@
 
 #include "examples/bokvs/bokvs.h"
 
+#include <immintrin.h>
+#include <omp.h>
+
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -8,7 +11,6 @@
 #include <iterator>
 #include <ostream>
 #include <vector>
-#include <immintrin.h>
 
 #include "examples/okvs/galois128.h"
 
@@ -85,19 +87,20 @@ bool OKVSBK::Encode(std::vector<uint128_t> keys,
             break;
           }
         }
-        yacl::parallel_for(i + 1, kk, [&](int64_t begin, int64_t end) {
-          for (int64_t idx = begin; idx < end; ++idx) {
-            int64_t posk = piv[i] - rows[idx].pos;
-            if (getBit(rows[idx].row[static_cast<int>(posk / 8)], posk % 8)) {
-              int64_t shiftnum = rows[idx].bpos - rows[i].bpos;
-              for (int64_t bb = 0; bb < b - shiftnum; bb++) {
-                rows[idx].row[bb] =
-                    rows[idx].row[bb] ^ rows[i].row[bb + shiftnum];
-              }
-              rows[idx].value = rows[idx].value ^ rows[i].value;
+
+        //#pragma omp parallel for schedule(static, 8)
+        for (int64_t idx = i + 1; idx < kk; idx++) {
+          int64_t posk = piv[i] - rows[idx].pos;
+          if (getBit(rows[idx].row[static_cast<int>(posk / 8)], posk % 8)) {
+            int64_t shiftnum = rows[idx].bpos - rows[i].bpos;
+#pragma omp simd
+            for (int64_t bb = 0; bb < b - shiftnum; bb++) {
+              rows[idx].row[bb] ^= rows[i].row[bb + shiftnum];
             }
+            rows[idx].value ^= rows[i].value;
           }
-        });
+        }
+
         break;
       }
     }

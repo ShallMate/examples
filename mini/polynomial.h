@@ -20,8 +20,6 @@
 
 #include "absl/strings/string_view.h"
 
-namespace psi::mini_psi {
-
 // for big num
 std::string EvalPolynomial(const std::vector<absl::string_view> &coeff,
                            absl::string_view X, std::string_view p);
@@ -40,5 +38,3 @@ std::vector<std::string> EvalPolynomial(
 std::vector<std::string> InterpolatePolynomial(
     const std::vector<absl::string_view> &poly_x,
     const std::vector<absl::string_view> &poly_y, std::string_view p_str);
-
-}  // namespace psi::mini_psi

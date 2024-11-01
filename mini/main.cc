@@ -1,10 +1,9 @@
-#include "yacl/link/test_util.h"
-#include "examples/mini/mini_psi.h"
 #include <iostream>
 #include <vector>
 
+#include "examples/mini/mini_psi.h"
 
-
+#include "yacl/link/test_util.h"
 
 std::vector<std::string> CreateRangeItems(size_t begin, size_t size) {
   std::vector<std::string> ret;
@@ -23,8 +22,8 @@ int RunEcdhPsi() {
   auto start_time = std::chrono::high_resolution_clock::now();
   std::future<void> sender =
       std::async(std::launch::async, [&] { MiniPsiSend(lctxs[0], x); });
-  std::future<std::vector<std::string>> receiver = std::async(
-      std::launch::async, [&] { return MiniPsiRecv(lctxs[1], y); });
+  std::future<std::vector<std::string>> receiver =
+      std::async(std::launch::async, [&] { return MiniPsiRecv(lctxs[1], y); });
   sender.get();
   auto z = receiver.get();
   auto end_time = std::chrono::high_resolution_clock::now();

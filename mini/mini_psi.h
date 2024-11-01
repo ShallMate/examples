@@ -14,15 +14,13 @@
 
 #pragma once
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "absl/types/span.h"
+
 #include "yacl/link/link.h"
-
-
 
 //
 // Compact and Malicious Private Set Intersection for Small Sets
@@ -36,7 +34,3 @@ void MiniPsiSend(const std::shared_ptr<yacl::link::Context>& link_ctx,
 std::vector<std::string> MiniPsiRecv(
     const std::shared_ptr<yacl::link::Context>& link_ctx,
     const std::vector<std::string>& items);
-
-
-
-
