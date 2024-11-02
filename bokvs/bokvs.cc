@@ -30,9 +30,9 @@ const uint8_t bitMasks[8] = {
     0x01,  // 0000 0001
 };
 
-bool getBit(uint8_t b, int n) { return (b & bitMasks[n]) > 0; }
+inline bool getBit(uint8_t b, int n) { return (b & bitMasks[n]) > 0; }
 
-std::vector<uint8_t> HashToFixedSize(size_t bytesize, uint128_t key) {
+inline std::vector<uint8_t> HashToFixedSize(size_t bytesize, uint128_t key) {
   std::vector<uint8_t> hashResult(bytesize);
 
   // 将 uint128_t 转换为字节数组
@@ -52,7 +52,7 @@ std::vector<uint8_t> HashToFixedSize(size_t bytesize, uint128_t key) {
   return hashResult;
 }
 
-Row Ro(uint128_t key, uint128_t r, size_t n, uint128_t value) {
+inline Row Ro(uint128_t key, uint128_t r, size_t n, uint128_t value) {
   std::vector<uint8_t> row = HashToFixedSize(n, key);
   int64_t pos = BytesToUint128(row) % r;
   int64_t bpos = pos / 8;

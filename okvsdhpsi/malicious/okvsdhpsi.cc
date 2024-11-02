@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "examples/okvsdhpsi/okvsdhpsi.h"
+#include "examples/okvsdhpsi/malicious/okvsdhpsi.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -27,6 +27,8 @@
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/crypto/rand/rand.h"
 #include "yacl/link/context.h"  // 包含 Context 类型定义的头文件
+
+namespace malicious {
 
 inline std::vector<int32_t> GetIntersectionIdx(
     const std::vector<uint128_t>& x, const std::vector<uint128_t>& y) {
@@ -152,3 +154,5 @@ void OkvsDHPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
                  yacl::ByteContainerView(x_str.data(), n * sizeof(uint128_t)),
                  "Send x_str");
 }
+
+};  // namespace malicious

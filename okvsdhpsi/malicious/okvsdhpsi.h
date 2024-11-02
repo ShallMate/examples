@@ -25,6 +25,7 @@
 #include "yacl/link/link.h"
 #include "yacl/utils/parallel.h"
 
+namespace malicious {
 namespace yc = yacl::crypto;
 
 class OkvsDHPsi {
@@ -52,3 +53,5 @@ std::vector<int32_t> OkvsDHPsiRecv(
 
 void OkvsDHPsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
                    std::vector<uint128_t>& x, okvs::Baxos baxos);
+
+}  // namespace malicious
