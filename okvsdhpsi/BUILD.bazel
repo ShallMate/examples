@@ -17,14 +17,17 @@ load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_test")
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_test(
-    name = "ecc_test",
+    name = "okvsdhpsi",
     srcs = [
+        "okvsdhpsi.h",
+        "okvsdhpsi.cc",
         "main.cc"
     ],
     deps = [
         "//yacl/crypto/ecc",
         "//yacl/link",
-        "//yacl/crypto/rand:rand"
+        "//yacl/crypto/rand:rand",
+        "//examples/okvsdhpsi/okvs:baxos"
     ],
     copts = ["-maes", "-mpclmul"],
 )

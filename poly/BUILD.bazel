@@ -1,4 +1,4 @@
-# Copyright 2024 Guowei LING
+# Copyright 2024 zhangwfjh
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_test")
+load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-yacl_cc_test(
-    name = "ecc_test",
+yacl_cc_binary(
+    name = "poly",
     srcs = [
-        "main.cc"
+        "main.cc",
     ],
+    copts = AES_COPT_FLAGS,
     deps = [
-        "//yacl/crypto/ecc",
-        "//yacl/link",
-        "//yacl/crypto/rand:rand"
+        "//yacl/base:exception",
+        "//yacl/base:int128",
+        "//yacl/math/f2k",
+        "//yacl/crypto/rand:rand",
+        "@com_google_googletest//:gtest"
     ],
-    copts = ["-maes", "-mpclmul"],
 )
-
-
-
-
 

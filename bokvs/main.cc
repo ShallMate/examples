@@ -8,7 +8,7 @@
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/utils/parallel.h"
 
-using namespace std;
+
 
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   std::vector<uint128_t> ret;
@@ -21,8 +21,8 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   // 示例参数
   size_t n = 1 << 20;
-  size_t w = 448;
-  double e = 1.01;
+  size_t w = 200;
+  double e = 1.02;
   // 创建OKVSBK实例
   OKVSBK ourokvs(n, w, e);
   auto r = ourokvs.getR();

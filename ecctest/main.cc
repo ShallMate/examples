@@ -11,6 +11,7 @@
 #include "yacl/base/int128.h"
 #include "yacl/crypto/ecc/ec_point.h"
 #include "yacl/crypto/ecc/ecc_spi.h"
+#include "yacl/crypto/rand/rand.h"
 #include "yacl/link/link.h"
 #include "yacl/utils/parallel.h"
 
@@ -84,7 +85,8 @@ void Insert(std::vector<yacl::Buffer> data, uint32_t cuckoolen) {
 
 int main() {
   auto ec = yacl::crypto::EcGroupFactory::Instance().Create(
-      /* curve name */ "secp256k1");
+      /* curve name */ "FourQ");
+  /*
   size_t n = 1 << 24;
   std::vector<yacl::Buffer> XS(n);
   if (!ec) {
@@ -102,5 +104,34 @@ int main() {
   });
   uint32_t cuckoolen = static_cast<uint32_t>(n * 1.01);
   Insert(XS, cuckoolen);
+  */
+  size_t n = 1<<20;
+
+  auto p = ec->GetOrder();
+  auto as = yacl::crypto::RandVec<uint128_t>(n);
+  auto bs = yacl::crypto::RandVec<uint128_t>(n);
+  std::vector<yacl::math::MPInt> cs(n);
+  std::vector<yacl::crypto::EcPoint> ps1(n);
+  std::vector<yacl::crypto::EcPoint> ps2(n);
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+  yacl::parallel_for(0, n , [&](int64_t beg, int64_t end) {
+    for (int64_t i = beg; i < end; ++i) {
+     yacl::math::MPInt::Mul(yacl::math::MPInt(as[i]),yacl::math::MPInt(bs[i]), &cs[i]);
+     cs[i] = cs[i].Mod(p);
+     ps1[i] = ec->MulBase(cs[i]); 
+    }
+  });
+  yacl::parallel_for(0, n , [&](int64_t beg, int64_t end) {
+    for (int64_t i = beg; i < end; ++i) {
+     ps2[i] = ec->MulBase(yacl::math::MPInt(as[i])); 
+    }
+  });
+  auto end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end_time - start_time;
+  std::cout << "Execution time: " << duration.count() << " seconds"
+            << std::endl;
+  ;
+
   return 0;
 }

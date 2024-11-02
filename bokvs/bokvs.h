@@ -15,12 +15,10 @@
 #pragma once
 
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <vector>
 
-#include "c/blake3.h"
 #include "examples/okvs/galois128.h"
 
 #include "yacl/base/int128.h"

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <ostream>
 #include <vector>
+#include "c/blake3.h"
 
 #include "examples/okvs/galois128.h"
 

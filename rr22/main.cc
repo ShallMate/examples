@@ -128,7 +128,7 @@ void RR22PsiSend(const std::shared_ptr<yacl::link::Context>& ctx,
 int main() {
   // 确保链接上下文定义正确
   // 准备OKVS的参数
-  const uint64_t num = 1 << 24;
+  const uint64_t num = 1 << 10;
   size_t bin_size = num;
   size_t weight = 3;
   // statistical security parameter
