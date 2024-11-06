@@ -51,14 +51,19 @@ std::vector<uint128_t> Interpolate(const std::vector<uint128_t>& xs,
 }
 
 int main(){
-  size_t size = 1<<12;
+  size_t size = 1<<10;
   auto xs = yacl::crypto::RandVec<uint128_t>(size);
   auto ys = yacl::crypto::RandVec<uint128_t>(size);
-
+  auto start_time = std::chrono::high_resolution_clock::now();
   auto ceof = Interpolate(xs, ys);
-  
+
+  auto end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end_time - start_time;
+  std::cout << "Execution time: " << duration.count() << " seconds"
+            << std::endl;
+  ;
   for (size_t i = 0; i < size; ++i) {
-    std::cout<<i<<std::endl;
+    //std::cout<<i<<std::endl;
     EXPECT_EQ(ys[i], Evaluate(ceof, xs[i]));
   }
 }

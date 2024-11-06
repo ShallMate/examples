@@ -1,0 +1,17 @@
+load("//bazel:yacl.bzl", "yacl_cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+yacl_cc_binary(
+    name = "pair_example",
+    srcs = [
+        "main.cc"
+    ],
+    deps = [
+        "//yacl/crypto/ecc:ecc",
+        "//yacl/crypto/pairing/factory:mcl_factory",
+        "//yacl/math/galois_field:gf"
+    ],
+    copts = ["-maes", "-mpclmul", "-I/usr/local/include"],  # 添加 include 路径到 copts
+    linkopts = ["-L/usr/local/lib", "-lcurve25519"],  # 指定库路径和库名称
+)
