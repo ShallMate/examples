@@ -20,7 +20,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 
 int main() {
   // 示例参数
-  size_t n = 1 << 20;
+  size_t n = 1 << 13;
   size_t w = 180;
   double e = 1.03;
   // 创建OKVSBK实例
