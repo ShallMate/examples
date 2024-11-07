@@ -12,22 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_binary")
+load("//bazel:yacl.bzl", "yacl_cc_binary")
 
 package(default_visibility = ["//visibility:public"])
 
 yacl_cc_binary(
-    name = "poly",
+    name = "fieldtest",
     srcs = [
         "main.cc",
     ],
-    copts = AES_COPT_FLAGS,
     deps = [
-        "//yacl/base:exception",
-        "//yacl/base:int128",
-        "//yacl/math/f2k",
-        "//yacl/crypto/rand:rand",
-        "@com_google_googletest//:gtest"
+        "//yacl/math/galois_field:gf",
+        "//yacl/math/mpint:mpint",
+        "//yacl/utils/spi:item",
     ],
+    copts = ["-O3"]
 )
 
