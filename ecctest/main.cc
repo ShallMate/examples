@@ -105,7 +105,7 @@ int main() {
   uint32_t cuckoolen = static_cast<uint32_t>(n * 1.01);
   Insert(XS, cuckoolen);
   */
-  size_t n = 1<<20;
+  size_t n = 1 << 20;
 
   auto p = ec->GetOrder();
   auto as = yacl::crypto::RandVec<uint128_t>(n);
@@ -115,16 +115,17 @@ int main() {
   std::vector<yacl::crypto::EcPoint> ps2(n);
 
   auto start_time = std::chrono::high_resolution_clock::now();
-  yacl::parallel_for(0, n , [&](int64_t beg, int64_t end) {
+  yacl::parallel_for(0, n, [&](int64_t beg, int64_t end) {
     for (int64_t i = beg; i < end; ++i) {
-     yacl::math::MPInt::Mul(yacl::math::MPInt(as[i]),yacl::math::MPInt(bs[i]), &cs[i]);
-     cs[i] = cs[i].Mod(p);
-     ps1[i] = ec->MulBase(cs[i]); 
+      yacl::math::MPInt::Mul(yacl::math::MPInt(as[i]), yacl::math::MPInt(bs[i]),
+                             &cs[i]);
+      cs[i] = cs[i].Mod(p);
+      ps1[i] = ec->MulBase(cs[i]);
     }
   });
-  yacl::parallel_for(0, n , [&](int64_t beg, int64_t end) {
+  yacl::parallel_for(0, n, [&](int64_t beg, int64_t end) {
     for (int64_t i = beg; i < end; ++i) {
-     ps2[i] = ec->MulBase(yacl::math::MPInt(as[i])); 
+      ps2[i] = ec->MulBase(yacl::math::MPInt(as[i]));
     }
   });
   auto end_time = std::chrono::high_resolution_clock::now();

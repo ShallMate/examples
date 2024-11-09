@@ -8,8 +8,6 @@
 #include "yacl/crypto/hash/hash_utils.h"
 #include "yacl/utils/parallel.h"
 
-
-
 std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   std::vector<uint128_t> ret;
   for (size_t i = 0; i < size; ++i) {

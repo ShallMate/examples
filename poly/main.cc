@@ -2,10 +2,11 @@
 
 #include <cstddef>
 #include <iostream>
-#include "yacl/crypto/rand/rand.h"
-#include "yacl/math/f2k/f2k.h"
+
 #include "gtest/gtest.h"
 
+#include "yacl/crypto/rand/rand.h"
+#include "yacl/math/f2k/f2k.h"
 
 uint128_t Evaluate(const std::vector<uint128_t>& coeffs, uint128_t x) {
   uint128_t y = coeffs.back();
@@ -16,7 +17,7 @@ uint128_t Evaluate(const std::vector<uint128_t>& coeffs, uint128_t x) {
 }
 
 std::vector<uint128_t> Interpolate(const std::vector<uint128_t>& xs,
-                                  const std::vector<uint128_t>& ys) {
+                                   const std::vector<uint128_t>& ys) {
   YACL_ENFORCE(xs.size() == ys.size());
   auto size = xs.size();
   auto poly = std::vector<uint128_t>(size + 1, 0);
@@ -50,8 +51,8 @@ std::vector<uint128_t> Interpolate(const std::vector<uint128_t>& xs,
   return coeffs;
 }
 
-int main(){
-  size_t size = 1<<10;
+int main() {
+  size_t size = 1 << 10;
   auto xs = yacl::crypto::RandVec<uint128_t>(size);
   auto ys = yacl::crypto::RandVec<uint128_t>(size);
   auto start_time = std::chrono::high_resolution_clock::now();
@@ -63,7 +64,7 @@ int main(){
             << std::endl;
   ;
   for (size_t i = 0; i < size; ++i) {
-    //std::cout<<i<<std::endl;
+    // std::cout<<i<<std::endl;
     EXPECT_EQ(ys[i], Evaluate(ceof, xs[i]));
   }
 }

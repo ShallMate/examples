@@ -25,8 +25,8 @@
 #include <iterator>
 #include <ostream>
 #include <vector>
-#include "c/blake3.h"
 
+#include "c/blake3.h"
 #include "examples/okvs/galois128.h"
 
 #include "yacl/base/int128.h"
@@ -69,7 +69,7 @@ inline std::vector<uint8_t> HashToFixedSize(size_t bytesize, uint128_t key) {
 inline Row Ro(uint128_t key, uint128_t r, size_t n, uint128_t value) {
   std::vector<uint8_t> row = HashToFixedSize(n, key);
   int64_t pos = BytesToUint128(row) % r;
-  int64_t bpos = pos>>3;
+  int64_t bpos = pos >> 3;
   pos = pos & -8;
   return {pos, bpos, row, value};
 }
@@ -92,7 +92,7 @@ bool OKVSBK::Encode(std::vector<uint128_t> keys,
             [](const Row& a, const Row& b) { return a.pos < b.pos; });
   for (int64_t i = 0; i < n; i++) {
     for (int64_t j = 0; j < w; j++) {
-      if (getBit(rows[i].row[static_cast<int>(j>>3)], j&7)) {
+      if (getBit(rows[i].row[static_cast<int>(j >> 3)], j & 7)) {
         piv[i] = j + rows[i].pos;
         flags[i] = true;
         int kk = n;
@@ -126,7 +126,7 @@ bool OKVSBK::Encode(std::vector<uint128_t> keys,
     int64_t pos = rows[i].pos;
     std::vector<std::uint8_t> row = rows[i].row;
     for (int64_t j = 0; j < w; j++) {
-      if (getBit(row[j>>3], j & 7)) {
+      if (getBit(row[j >> 3], j & 7)) {
         int64_t index = pos + j;
         res = res ^ (this->p_)[index];
       }
@@ -148,7 +148,7 @@ void OKVSBK::Decode(std::vector<uint128_t> keys,
       int64_t pos = BytesToUint128(row) % r;
       pos = pos & -8;
       for (int64_t j = pos; j < w + pos; j++) {
-        if (getBit(row[(j - pos)>>3], (j - pos)&7)) {
+        if (getBit(row[(j - pos) >> 3], (j - pos) & 7)) {
           values[idx] = values[idx] ^ p[j];
         }
       }
@@ -168,7 +168,7 @@ void OKVSBK::DecodeOtherP(std::vector<uint128_t> keys,
       int64_t pos = BytesToUint128(row) % r;
       pos = pos & -8;
       for (int64_t j = pos; j < w + pos; j++) {
-        if (getBit(row[(j - pos) >>3], (j - pos) &7)) {
+        if (getBit(row[(j - pos) >> 3], (j - pos) & 7)) {
           values[idx] = values[idx] ^ p[j];
         }
       }

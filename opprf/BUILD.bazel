@@ -1,4 +1,4 @@
-# Copyright 2024 Guowei Ling
+# Copyright 2024 Guowei Ling.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,26 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//bazel:yacl.bzl", "AES_COPT_FLAGS", "yacl_cc_library", "yacl_cc_test")
+load("//bazel:yacl.bzl", "yacl_cc_binary")
 
 package(default_visibility = ["//visibility:public"])
 
-yacl_cc_library(
-    name = "ecdh_psi",
+yacl_cc_binary(
+    name = "opprf",
     srcs = [
-        "ecdh_psi.cc",
-    ],
-    hdrs = [
-        "ecdh_psi.h",
+        "main.cc",
+        "opprf.h",
+        "opprf.cc"
     ],
     deps = [
-        "//yacl/crypto/ecc",
-        "//yacl/link",
+        "//examples/opprf/okvs:galois128",
+        "//examples/opprf/okvs:baxos",
+        "//yacl/kernel/algorithms:silent_vole",
+        "//yacl/link:test_util"
     ],
-)
-
-yacl_cc_test(
-    name = "ecdh_psi_test",
-    srcs = ["ecdh_psi_test.cc"],
-    deps = [":ecdh_psi"],
+    copts = ["-maes", "-mpclmul"],
 )
