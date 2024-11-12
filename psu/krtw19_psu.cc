@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iostream>
 #include <iterator>
 #include <vector>
 
@@ -33,7 +34,7 @@ constexpr size_t kNumBinsPerBatch{16ul};
 constexpr size_t kBatchSize{kNumBinsPerBatch * kBinSize};
 constexpr size_t kNumInkpOT{512ul};
 
-static auto HashToSizeT = [](const uint128_t& x) {
+auto inline HashToSizeT = [](const uint128_t& x) {
   auto hash = yacl::crypto::Blake3_128({&x, sizeof(x)});
   size_t ret;
   std::memcpy(&ret, &hash, sizeof(ret));
@@ -140,6 +141,7 @@ void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
     receiver.SendCorrection(ctx, kBinSize);
 
     // Step 3. For each bin element, invokes PSU(1, m+1)
+    // std::cout<<hashing[bin_idx].size()<<std::endl;
     for (size_t i = 0; i < hashing[bin_idx].size(); ++i) {
       auto elem = hashing[bin_idx][i];
       elems.emplace_back(elem);
@@ -202,11 +204,16 @@ std::vector<uint128_t> KrtwPsuRecv(
     auto bin_size = hashing[bin_idx].size();
     for (size_t elem_idx = 0; elem_idx != kBinSize; ++elem_idx, ++oprf_idx) {
       auto seed = yacl::crypto::FastRandU64();
-      std::vector<uint64_t> xs(kBinSize), ys(kBinSize);
+      std::vector<uint64_t> xs(kBinSize);
+      std::vector<uint64_t> ys(kBinSize);
       for (size_t i = 0; i != kBinSize; ++i) {
-        xs[i] =
-            (i < bin_size ? HashToSizeT(hashing[bin_idx][i])
-                          : i > bin_size ? yacl::crypto::FastRandU64() : kBot);
+        if (i < bin_size) {
+          xs[i] = HashToSizeT(hashing[bin_idx][i]);
+        } else if (i > bin_size) {
+          xs[i] = yacl::crypto::FastRandU64();
+        } else {
+          xs[i] = kBot;
+        }
         oprf->Eval(oprf_idx, xs[i], reinterpret_cast<uint8_t*>(&ys[i]),
                    sizeof(ys[i]));
         ys[i] ^= seed;

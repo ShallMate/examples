@@ -45,7 +45,7 @@ int main() {
 
   std::vector<uint128_t> items_a = CreateRangeItems(0, num);
   std::vector<uint128_t> items_b = CreateRangeItems(0, num);
-  std::vector<uint128_t> items_c = CreateRangeItems(0, num);
+  std::vector<uint128_t> items_c = CreateRangeItems(10, num);
 
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
@@ -65,7 +65,8 @@ int main() {
   std::chrono::duration<double> duration = end_time - start_time;
   std::cout << "Execution time: " << duration.count() << " seconds"
             << std::endl;
-
+  std::cout << items_b[10] << std::endl;
+  std::cout << prf_result[0] << std::endl;
   if (std::equal(items_b.begin(), items_b.end(), prf_result.begin())) {
     std::cout << "items_b and prf_result are equal." << std::endl;
   } else {

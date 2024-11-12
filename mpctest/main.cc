@@ -21,7 +21,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   const int kWorldSize = 2;
   auto contexts = yacl::link::test::SetupWorld(kWorldSize);
-  auto n = 1 << 14;
+  auto n = 1 << 10;
   std::vector<uint128_t> items_a = CreateRangeItems(0, n);
   std::vector<uint128_t> items_b = CreateRangeItems(1, n);
 

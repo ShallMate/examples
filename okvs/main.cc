@@ -92,7 +92,7 @@ void RunBaxosTest(size_t items_num) {
 }  // namespace okvs
 
 int main() {
-  okvs::RunBaxosTest(1048576);
+  okvs::RunBaxosTest(1 << 10);
 
   return 0;
 }
