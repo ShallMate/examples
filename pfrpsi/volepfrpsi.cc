@@ -95,13 +95,13 @@ std::vector<int32_t> PRFPSIRecv(const std::shared_ptr<yacl::link::Context>& ctx,
   std::vector<uint128_t> p(okvssize);
   baxos.Solve(absl::MakeSpan(elem_hashes), absl::MakeSpan(elem_hashes),
               absl::MakeSpan(p), nullptr, 8);
+  volereceiver.get();
   std::vector<uint128_t> aprime(okvssize);
   yacl::parallel_for(0, aprime.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
       aprime[idx] = a[idx] ^ p[idx];
     }
   });
-  volereceiver.get();
   ctx->SendAsync(
       ctx->NextRank(),
       yacl::ByteContainerView(aprime.data(), aprime.size() * sizeof(uint128_t)),

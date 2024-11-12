@@ -13,7 +13,7 @@ int main() {
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
   const auto codetype = yacl::crypto::CodeType::ExAcc11;
-  const uint64_t num = 1048576;
+  const uint64_t num = 1<<10;
 
   std::vector<uint128_t> a(num);
   std::vector<uint128_t> b(num);

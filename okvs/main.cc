@@ -24,7 +24,7 @@
 namespace okvs {
 
 void RunBaxosTest(size_t items_num) {
-  size_t bin_size = items_num / 16;
+  size_t bin_size = items_num;
   size_t weight = 3;
   // statistical security parameter
   size_t ssp = 40;

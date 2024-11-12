@@ -24,7 +24,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   // 确保链接上下文定义正确
   // 准备OKVS的参数
-  const uint64_t num = 1 << 20;
+  const uint64_t num = 1 << 10;
   size_t bin_size = num;
   size_t weight = 3;
   // statistical security parameter

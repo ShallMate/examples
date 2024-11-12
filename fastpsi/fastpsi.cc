@@ -49,13 +49,13 @@ std::vector<uint128_t> FastPsiRecv(
   // Encode
   ourokvs.Encode(elem_hashes, elem_hashes);
   std::vector<uint128_t> aprime(okvssize);
+  volereceiver.get();
 
   yacl::parallel_for(0, aprime.size(), [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
       aprime[idx] = a[idx] ^ ourokvs.p_[idx];
     }
   });
-  volereceiver.get();
 
   ctx->SendAsync(
       ctx->NextRank(),

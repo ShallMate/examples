@@ -23,7 +23,7 @@
 #include "yacl/link/test_util.h"
 
 int main() {
-  size_t n = 1 << 20;
+  size_t n = 1 << 10;
   size_t w = 512;
   double e = 1.01;
   OKVSBK ourokvs(n, w, e);
