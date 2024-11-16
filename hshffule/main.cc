@@ -36,16 +36,16 @@ int RunHomoOSU() {
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
   auto start_time = std::chrono::high_resolution_clock::now();
   std::future<std::vector<size_t>> sender =
-    std::async(std::launch::async, [&]() -> std::vector<size_t> {
+      std::async(std::launch::async, [&]() -> std::vector<size_t> {
         return OsuSend(lctxs[0], x);  // 返回函数结果
-    });
-  std::future<yacl::dynamic_bitset<uint128_t>> receiver = std::async(
-      std::launch::async, [&] { return OsuRecv(lctxs[1], y); });
+      });
+  std::future<yacl::dynamic_bitset<uint128_t>> receiver =
+      std::async(std::launch::async, [&] { return OsuRecv(lctxs[1], y); });
   sender.get();
   auto z = receiver.get();
   auto end_time = std::chrono::high_resolution_clock::now();
   for (size_t i = 0; i < n; ++i) {
-    std::cout<<z[i]<<std::endl;
+    std::cout << z[i] << std::endl;
   }
   std::chrono::duration<double> duration = end_time - start_time;
   std::cout << "Execution time: " << duration.count() << " seconds"
@@ -73,9 +73,4 @@ int RunHomoOSU() {
   return 0;
 }
 
-int main() { 
-  RunHomoOSU();
-
-
-
-}
+int main() { RunHomoOSU(); }

@@ -47,7 +47,7 @@ std::vector<int32_t> RR22PsiRecv(
   // VOLE
   ctx->SendAsync(ctx->NextRank(), yacl::SerializeUint128(okvssize),
                  "baxos.size");
-  
+
   // VOLE
   const auto codetype = yacl::crypto::CodeType::ExAcc11;
   std::vector<uint128_t> a(okvssize);
@@ -83,8 +83,8 @@ std::vector<int32_t> RR22PsiRecv(
   std::memcpy(sendermasks.data(), buf.data(), buf.size());
 
   auto z = GetIntersectionIdx(sendermasks, receivermasks);
-  std::cout<<sendermasks[0]<<std::endl;
-  std::cout<<receivermasks[0]<<std::endl;
+  std::cout << sendermasks[0] << std::endl;
+  std::cout << receivermasks[0] << std::endl;
   return z;
 }
 
@@ -168,7 +168,7 @@ int main() {
   auto psi_result = rr22_receiver.get();
   auto end_time = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> duration = end_time - start_time;
-  std::cout<<psi_result.size()<<std::endl;
+  std::cout << psi_result.size() << std::endl;
   std::cout << "Execution time: " << duration.count() << " seconds"
             << std::endl;
   ;

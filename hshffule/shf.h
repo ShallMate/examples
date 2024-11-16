@@ -29,19 +29,22 @@ class Shuffle {
  public:
   Shuffle() {
     // Use FourQ curve
-    ec_ = yc::EcGroupFactory::Instance().Create( "FourQ");
+    ec_ = yc::EcGroupFactory::Instance().Create("FourQ");
     // Generate random key
     yc::MPInt::RandomLtN(ec_->GetOrder(), &sk_);
     pk_ = ec_->MulBase(sk_);
   }
 
-  void EncInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2);
-  
-  void DecInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2,yacl::dynamic_bitset<uint128_t>& out);
+  void EncInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                 absl::Span<yc::EcPoint> c2);
 
-  void MulInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2);
+  void DecInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                 absl::Span<yc::EcPoint> c2,
+                 yacl::dynamic_bitset<uint128_t>& out);
 
-  
+  void MulInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                 absl::Span<yc::EcPoint> c2);
+
   void PointstoBuffer(absl::Span<yc::EcPoint> in,
                       absl::Span<std::uint8_t> buffer);
 
@@ -51,12 +54,13 @@ class Shuffle {
  private:
   yc::MPInt sk_;  // secret key
   yc::EcPoint pk_;
+
  public:
   std::shared_ptr<yc::EcGroup> ec_;  // ec group
 };
 
-yacl::dynamic_bitset<uint128_t> OsuRecv(const std::shared_ptr<yacl::link::Context>& ctx,
-                                std::vector<uint128_t>& y);
+yacl::dynamic_bitset<uint128_t> OsuRecv(
+    const std::shared_ptr<yacl::link::Context>& ctx, std::vector<uint128_t>& y);
 
 std::vector<size_t> OsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<uint128_t>& x);
+                            std::vector<uint128_t>& x);

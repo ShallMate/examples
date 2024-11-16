@@ -24,12 +24,10 @@
 #include "yacl/crypto/rand/rand.h"
 #include "yacl/utils/parallel.h"
 
-
-
 std::vector<size_t> OsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
-                 std::vector<uint128_t>& x) {
+                            std::vector<uint128_t>& x) {
   Shuffle sender;
-  uint64_t max_point_length = sender.ec_->GetSerializeLength(); 
+  uint64_t max_point_length = sender.ec_->GetSerializeLength();
   size_t n = x.size();
   uint64_t total_length = max_point_length * n;
   std::vector<uint8_t> c1buffer(total_length);
@@ -69,18 +67,18 @@ std::vector<size_t> OsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
       yacl::ByteContainerView(c2buffer.data(), total_length * sizeof(uint8_t)),
       "Send new c2");
 
-
   return indices;
 }
 
-yacl::dynamic_bitset<uint128_t> OsuRecv(const std::shared_ptr<yacl::link::Context>& ctx,
-                                std::vector<uint128_t>& y) {
+yacl::dynamic_bitset<uint128_t> OsuRecv(
+    const std::shared_ptr<yacl::link::Context>& ctx,
+    std::vector<uint128_t>& y) {
   Shuffle receiver;
   size_t n = y.size();
   std::vector<yc::EcPoint> c1(n);
   std::vector<yc::EcPoint> c2(n);
-  receiver.EncInputs(absl::MakeSpan(y),absl::MakeSpan(c1),absl::MakeSpan(c2));
-  uint64_t max_point_length = receiver.ec_->GetSerializeLength();  
+  receiver.EncInputs(absl::MakeSpan(y), absl::MakeSpan(c1), absl::MakeSpan(c2));
+  uint64_t max_point_length = receiver.ec_->GetSerializeLength();
   uint64_t total_length = max_point_length * n;
   std::vector<uint8_t> c1buffer(total_length);
   std::vector<uint8_t> c2buffer(total_length);
@@ -103,11 +101,10 @@ yacl::dynamic_bitset<uint128_t> OsuRecv(const std::shared_ptr<yacl::link::Contex
   receiver.BuffertoPoints(absl::MakeSpan(c1), absl::MakeSpan(c1buffer));
   receiver.BuffertoPoints(absl::MakeSpan(c2), absl::MakeSpan(c2buffer));
   yacl::dynamic_bitset<uint128_t> flags(n);
-  receiver.DecInputs(absl::MakeSpan(y),absl::MakeSpan(c1),absl::MakeSpan(c2),flags);
+  receiver.DecInputs(absl::MakeSpan(y), absl::MakeSpan(c1), absl::MakeSpan(c2),
+                     flags);
   return flags;
-
 }
-
 
 void Shuffle::PointstoBuffer(absl::Span<yc::EcPoint> in,
                              absl::Span<std::uint8_t> buffer) {
@@ -130,7 +127,8 @@ void Shuffle::BuffertoPoints(absl::Span<yc::EcPoint> in,
   });
 }
 
-void Shuffle::EncInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2){
+void Shuffle::EncInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                        absl::Span<yc::EcPoint> c2) {
   auto rs = yacl::crypto::RandVec<uint128_t>(in.size());
   yacl::parallel_for(0, in.size(), [&](size_t begin, size_t end) {
     for (size_t idx = begin; idx < end; ++idx) {
@@ -143,31 +141,34 @@ void Shuffle::EncInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,abs
   });
 }
 
-void Shuffle::DecInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2,yacl::dynamic_bitset<uint128_t>& out){
+void Shuffle::DecInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                        absl::Span<yc::EcPoint> c2,
+                        yacl::dynamic_bitset<uint128_t>& out) {
   auto rs = yacl::crypto::RandVec<uint128_t>(in.size());
   yacl::parallel_for(0, in.size(), [&](size_t begin, size_t end) {
     for (size_t idx = begin; idx < end; ++idx) {
       auto rpk = ec_->Mul(c1[idx], sk_);
       auto mG = ec_->Sub(c2[idx], rpk);
-      if(ec_->IsInfinity(mG)){
+      if (ec_->IsInfinity(mG)) {
         out[idx] = true;
-      }else{
+      } else {
         out[idx] = false;
       }
     }
   });
 }
 
-void Shuffle::MulInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,absl::Span<yc::EcPoint> c2){
+void Shuffle::MulInputs(absl::Span<uint128_t> in, absl::Span<yc::EcPoint> c1,
+                        absl::Span<yc::EcPoint> c2) {
   auto rs = yacl::crypto::RandVec<uint128_t>(in.size());
   yacl::parallel_for(0, in.size(), [&](size_t begin, size_t end) {
     for (size_t idx = begin; idx < end; ++idx) {
       auto r = yc::MPInt(rs[idx]);
       auto mg = ec_->MulBase(yc::MPInt(in[idx]));
-      //c1[idx] = ec_->Sub(c1[idx],mg);
-      c2[idx] = ec_->Sub(c2[idx],mg);
-      c1[idx] = ec_->Mul(c1[idx],r);
-      c2[idx] = ec_->Mul(c2[idx],r);
+      // c1[idx] = ec_->Sub(c1[idx],mg);
+      c2[idx] = ec_->Sub(c2[idx], mg);
+      c1[idx] = ec_->Mul(c1[idx], r);
+      c2[idx] = ec_->Mul(c2[idx], r);
     }
   });
 }

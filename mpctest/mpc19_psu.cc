@@ -132,7 +132,7 @@ void KrtwPsuSend(const std::shared_ptr<yacl::link::Context>& ctx,
               allcoeffs[i].begin());
   }
   std::vector<std::vector<uint128_t>> ys(hashing.size(),
-                                               std::vector<uint128_t>(kBinSize));
+                                         std::vector<uint128_t>(kBinSize));
 
   // receiver.SendCorrection(ctx, num_ot);
   for (size_t b = 0; b < hashing.size(); b++) {
@@ -229,7 +229,7 @@ std::vector<uint128_t> KrtwPsuRecv(
       "Send coefficients");
 
   std::vector<std::vector<uint128_t>> allys(hashing.size(),
-                                               std::vector<uint128_t>(kBinSize));
+                                            std::vector<uint128_t>(kBinSize));
 
   // 接收数据
   auto bufys = ctx->Recv(ctx->PrevRank(), "Receive ys");

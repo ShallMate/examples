@@ -28,8 +28,7 @@ namespace opprf {
 
 std::vector<uint128_t> OPPRFRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos,
-    size_t peersize) {
+    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos, size_t peersize) {
   uint128_t okvssize = baxos.size();
 
   // VOLE

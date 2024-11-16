@@ -73,7 +73,7 @@ void RunCOte() {
   const int kWorldSize = 2;
   auto contexts = yacl::link::test::SetupWorld(kWorldSize);
   auto ss_receiver = yacl::crypto::SoftspokenOtExtReceiver();
-  auto ss_sender = yacl::crypto::SoftspokenOtExtSender(); 
+  auto ss_sender = yacl::crypto::SoftspokenOtExtSender();
   auto start_time = std::chrono::high_resolution_clock::now();
   std::future<void> ot_sender =
       std::async(std::launch::async, [&] { COTSend(contexts[0]); });
