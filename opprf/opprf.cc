@@ -28,7 +28,8 @@ namespace opprf {
 
 std::vector<uint128_t> OPPRFRecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos) {
+    std::vector<uint128_t>& elem_hashes, okvs::Baxos baxos,
+    size_t peersize) {
   uint128_t okvssize = baxos.size();
 
   // VOLE
@@ -79,7 +80,8 @@ std::vector<uint128_t> OPPRFRecv(
 
 void OPPRFSend(const std::shared_ptr<yacl::link::Context>& ctx,
                std::vector<uint128_t>& elem_hashes,
-               std::vector<uint128_t>& elem_hashes1, okvs::Baxos baxos) {
+               std::vector<uint128_t>& elem_hashes1, okvs::Baxos baxos,
+               size_t peersize) {
   size_t okvssize =
       DeserializeUint128(ctx->Recv(ctx->PrevRank(), "baxos.size"));
   const auto codetype = yacl::crypto::CodeType::Silver5;

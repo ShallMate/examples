@@ -108,7 +108,7 @@ void RunRR22() {
 }
 
 void RunUPSI() {
-  const uint64_t num = 1 << 20;
+  const uint64_t num = 1 << 17;
   const uint64_t addnum = 1 << 8;
   const uint64_t subnum = 1 << 8;
   SPDLOG_INFO("|X| = |Y|: {}", num);

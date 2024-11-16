@@ -24,7 +24,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 int main() {
   // 确保链接上下文定义正确
   // 准备OKVS的参数
-  const uint64_t num = 1 << 10;
+  const uint64_t num = 1 << 20;
   size_t bin_size = num;
   size_t weight = 3;
   // statistical security parameter
@@ -45,7 +45,7 @@ int main() {
 
   std::vector<uint128_t> items_a = CreateRangeItems(0, num);
   std::vector<uint128_t> items_b = CreateRangeItems(0, num);
-  std::vector<uint128_t> items_c = CreateRangeItems(10, num);
+  std::vector<uint128_t> items_c = CreateRangeItems(0, num);
 
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
 
@@ -65,8 +65,6 @@ int main() {
   std::chrono::duration<double> duration = end_time - start_time;
   std::cout << "Execution time: " << duration.count() << " seconds"
             << std::endl;
-  std::cout << items_b[10] << std::endl;
-  std::cout << prf_result[0] << std::endl;
   if (std::equal(items_b.begin(), items_b.end(), prf_result.begin())) {
     std::cout << "items_b and prf_result are equal." << std::endl;
   } else {
