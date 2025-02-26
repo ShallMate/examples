@@ -1,0 +1,24 @@
+load("//bazel:yacl.bzl", "yacl_cc_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+yacl_cc_binary(
+    name = "apsitest",
+    srcs = ["main.cc"],
+    deps = [
+        "//yacl/base:int128",
+        "//yacl/math/f2k:f2k",
+        "//examples/okvs:galois128",
+        "//yacl/crypto/hash:blake3",
+        "//yacl/utils:parallel",
+        "//yacl/crypto/hash:hash_utils",
+        "@local_apsi//:apsi",  # 使用 WORKSPACE 里定义的 APSI
+        "@seal//:seal",  # 让 Bazel 认识 SEAL
+        "@kuku//:kuku"
+    ],
+    copts = ["-I/usr/local/include/APSI-0.11",
+             "-I/usr/local/include/SEAL-4.1",
+             "-I/usr/local/include/Kuku-2.1",
+             "-O3"],
+    linkopts = ["-L/usr/local/lib", "-lapsi-0.11","-ljsoncpp","-llog4cplus","-O3"],
+)

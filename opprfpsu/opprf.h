@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "examples/opprf/okvs/baxos.h"
+#include "examples/opprfpsu/okvs/baxos.h"
 
 #include "yacl/link/test_util.h"
 

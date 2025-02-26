@@ -30,7 +30,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
 }
 
 int RunHomoOSU() {
-  size_t n = 1 << 10;
+  size_t n = 1.3 * (1 << 20);
   auto x = CreateRangeItems(0, n);
   auto y = CreateRangeItems(0, n);
   auto lctxs = yacl::link::test::SetupWorld(2);  // setup network

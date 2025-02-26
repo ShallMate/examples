@@ -1,4 +1,4 @@
-// Copyright 2024 Guowei LING.
+// Copyright 2023 Ant Group Co., Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,20 +14,14 @@
 
 #pragma once
 
-#include "examples/opprf/okvs/baxos.h"
+#include <cstdint>
 
-#include "yacl/link/test_util.h"
+namespace okvs {
 
-namespace opprf {
+class SimpleIndex {
+ public:
+  static uint64_t GetBinSize(uint64_t num_bins, uint64_t num_balls,
+                             uint64_t stat_sec_param, bool approx = true);
+};
 
-std::vector<uint128_t> OPPRFRecv(
-    const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, okvs::Baxos sendbaxos,
-    okvs::Baxos recvbaxos);
-
-void OPPRFSend(const std::shared_ptr<yacl::link::Context>& ctx,
-               std::vector<uint128_t>& elem_hashes,
-               std::vector<uint128_t>& elem_hashes1, okvs::Baxos sendbaxos,
-               okvs::Baxos recvbaxos);
-
-}  // namespace opprf
+}  // namespace okvs

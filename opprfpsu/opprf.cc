@@ -13,12 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "examples/opprf/opprf.h"
+#include "examples/opprfpsu/opprf.h"
 
 #include <iostream>
 #include <vector>
 
-#include "examples/opprf/okvs/galois128.h"
+#include "examples/opprfpsu/okvs/galois128.h"
 
 #include "yacl/base/int128.h"
 #include "yacl/kernel/algorithms/silent_vole.h"

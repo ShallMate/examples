@@ -1,9 +1,10 @@
 #include <iostream>
 #include <vector>
 
-#include "examples/opprf/okvs/baxos.h"
-#include "examples/opprf/okvs/galois128.h"
-#include "examples/opprf/opprf.h"
+#include "examples/opprfpsu/okvs/baxos.h"
+#include "examples/opprfpsu/okvs/galois128.h"
+#include "examples/opprfpsu/opprf.h"
+#include "examples/opprfpsu/opprfpsu.h"
 
 #include "yacl/base/int128.h"
 #include "yacl/kernel/algorithms/silent_vole.h"
@@ -21,9 +22,7 @@ std::vector<uint128_t> CreateRangeItems(size_t begin, size_t size) {
   return ret;
 }
 
-int main() {
-  // 确保链接上下文定义正确
-  // 准备OKVS的参数
+int RunOPPRF() {
   const uint64_t ns = 1.3 * (1 << 20);
   const uint64_t nr = 3 * (1 << 20);
   size_t sender_bin_size = ns;
@@ -91,4 +90,60 @@ int main() {
             << bytesToMB(receiver_stats->sent_bytes.load()) +
                    bytesToMB(receiver_stats->recv_bytes.load())
             << " MB" << std::endl;
+  return 0;
 }
+
+int RunPSU() {
+  const uint64_t ns = 1 << 21;
+  const uint64_t nr = 1 << 21;
+
+  okvs::Baxos sendbaxos;
+  okvs::Baxos recvbaxos;
+  yacl::crypto::Prg<uint128_t> prng(yacl::crypto::FastRandU128());
+
+  uint128_t seed;
+  prng.Fill(absl::MakeSpan(&seed, 1));
+
+  std::vector<uint128_t> items_a = CreateRangeItems(0, ns);
+  std::vector<uint128_t> items_c = CreateRangeItems(0, nr);
+
+  auto lctxs = yacl::link::test::SetupBrpcWorld(2);  // setup network
+
+  auto start_time = std::chrono::high_resolution_clock::now();
+
+  std::future<void> opprfpsu_sender = std::async(
+      std::launch::async, [&] { OPPRFPSUSend(lctxs[0], items_a, seed); });
+
+  std::future<std::vector<uint128_t>> opprfpsu_receiver =
+      std::async(std::launch::async,
+                 [&] { return OPPRFPSURecv(lctxs[1], items_c, seed); });
+
+  opprfpsu_sender.get();
+  auto psu_result = opprfpsu_receiver.get();
+  auto end_time = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> duration = end_time - start_time;
+  std::cout << "Execution time: " << duration.count() << " seconds"
+            << std::endl;
+  auto bytesToMB = [](size_t bytes) -> double {
+    return static_cast<double>(bytes) / (1024 * 1024);
+  };
+  auto sender_stats = lctxs[0]->GetStats();
+  auto receiver_stats = lctxs[1]->GetStats();
+  std::cout << "Sender sent bytes: "
+            << bytesToMB(sender_stats->sent_bytes.load()) << " MB" << std::endl;
+  std::cout << "Sender received bytes: "
+            << bytesToMB(sender_stats->recv_bytes.load()) << " MB" << std::endl;
+  std::cout << "Receiver sent bytes: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Receiver received bytes: "
+            << bytesToMB(receiver_stats->recv_bytes.load()) << " MB"
+            << std::endl;
+  std::cout << "Total Communication: "
+            << bytesToMB(receiver_stats->sent_bytes.load()) +
+                   bytesToMB(receiver_stats->recv_bytes.load())
+            << " MB" << std::endl;
+  return 0;
+}
+
+int main() { RunPSU(); }

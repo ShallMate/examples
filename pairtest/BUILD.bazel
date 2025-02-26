@@ -13,5 +13,5 @@ yacl_cc_binary(
         "//yacl/math/galois_field:gf"
     ],
     copts = ["-maes", "-mpclmul", "-I/usr/local/include"],  # 添加 include 路径到 copts
-    linkopts = ["-L/usr/local/lib", "-lcurve25519"],  # 指定库路径和库名称
+    linkopts = ["-L/usr/local/lib"],  # 指定库路径和库名称
 )

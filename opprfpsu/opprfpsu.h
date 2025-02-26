@@ -11,23 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #pragma once
 
-#include "examples/opprf/okvs/baxos.h"
+#include <memory>
+#include <vector>
 
-#include "yacl/link/test_util.h"
+#include "yacl/base/int128.h"
+#include "yacl/link/context.h"
 
-namespace opprf {
-
-std::vector<uint128_t> OPPRFRecv(
+std::vector<uint128_t> OPPRFPSURecv(
     const std::shared_ptr<yacl::link::Context>& ctx,
-    std::vector<uint128_t>& elem_hashes, okvs::Baxos sendbaxos,
-    okvs::Baxos recvbaxos);
+    std::vector<uint128_t>& elem_hashes, uint128_t seed);
 
-void OPPRFSend(const std::shared_ptr<yacl::link::Context>& ctx,
-               std::vector<uint128_t>& elem_hashes,
-               std::vector<uint128_t>& elem_hashes1, okvs::Baxos sendbaxos,
-               okvs::Baxos recvbaxos);
-
-}  // namespace opprf
+void OPPRFPSUSend(const std::shared_ptr<yacl::link::Context>& ctx,
+                  std::vector<uint128_t>& elem_hashes, uint128_t seed);

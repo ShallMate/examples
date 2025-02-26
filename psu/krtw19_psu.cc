@@ -27,12 +27,12 @@ namespace examples::psu {
 namespace {
 
 // reference: https://eprint.iacr.org/2019/1234.pdf (Figure 2)
-constexpr float kZeta{0.06f};
-constexpr size_t kBinSize{64ul};  // m+1
+constexpr float kZeta{0.06F};
+constexpr size_t kBinSize{64UL};  // m+1
 constexpr uint128_t kBot{0};
-constexpr size_t kNumBinsPerBatch{16ul};
+constexpr size_t kNumBinsPerBatch{16UL};
 constexpr size_t kBatchSize{kNumBinsPerBatch * kBinSize};
-constexpr size_t kNumInkpOT{512ul};
+constexpr size_t kNumInkpOT{512UL};
 
 auto inline HashToSizeT = [](const uint128_t& x) {
   auto hash = yacl::crypto::Blake3_128({&x, sizeof(x)});

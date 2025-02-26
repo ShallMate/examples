@@ -66,7 +66,7 @@ void RunRR22() {
   std::vector<uint128_t> items_a = CreateRangeItems(0, num);
   std::vector<uint128_t> items_b = CreateRangeItems(10, num);
 
-  auto lctxs = yacl::link::test::SetupWorld(2);  // setup network
+  auto lctxs = yacl::link::test::SetupBrpcWorld(2);  // setup network
 
   auto start_time = std::chrono::high_resolution_clock::now();
 
