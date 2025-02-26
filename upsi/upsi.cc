@@ -24,7 +24,6 @@
 #include "examples/upsi/rr22/okvs/baxos.h"
 #include "examples/upsi/rr22/rr22.h"
 
-
 using namespace std;
 
 std::vector<uint128_t> BasePsiRecv(

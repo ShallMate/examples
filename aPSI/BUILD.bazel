@@ -4,7 +4,11 @@ package(default_visibility = ["//visibility:public"])
 
 yacl_cc_binary(
     name = "apsitest",
-    srcs = ["main.cc"],
+        srcs = [
+        "aPSI.h",
+        "aPSI.cc",
+        "main.cc"
+    ],
     deps = [
         "//yacl/base:int128",
         "//yacl/math/f2k:f2k",

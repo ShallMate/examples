@@ -49,7 +49,7 @@ std::vector<uint128_t> OPPRFPSURecv(
   std::vector<uint128_t> values1(sender_bin_size);
   std::vector<uint128_t> values2(sender_bin_size);
   std::vector<uint128_t> values3(sender_bin_size);
-  duplicate_elements(elem_hashes, values1, values2,values3, ss, cuckoolen);
+  duplicate_elements(elem_hashes, values1, values2, values3, ss, cuckoolen);
   size_t weight = 3;
   // statistical security parameter
   size_t ssp = 40;
@@ -59,7 +59,6 @@ std::vector<uint128_t> OPPRFPSURecv(
                  okvs::PaxosParam::DenseType::GF128, seed);
   recvbaxos.Init(cuckoolen, cuckoolen, weight, ssp,
                  okvs::PaxosParam::DenseType::GF128, seed);
-  
 
   // opprf::OPPRFSend(ctx, keys, values, sendbaxos,recvbaxos);
   size_t recvokvssize =
@@ -75,7 +74,6 @@ std::vector<uint128_t> OPPRFPSURecv(
   });
   volesender.get();
 
-
   std::vector<uint128_t> aprime(recvokvssize);
   auto buf = ctx->Recv(ctx->PrevRank(), "Receive A' = P+A");
   YACL_ENFORCE(buf.size() == int64_t(recvokvssize * sizeof(uint128_t)));
@@ -89,8 +87,6 @@ std::vector<uint128_t> OPPRFPSURecv(
     }
   });
 
-
-   
   std::vector<uint128_t> sendermasks(sender_bin_size);
   std::vector<uint128_t> sendermasks1(sender_bin_size);
   std::vector<uint128_t> sendermasks2(sender_bin_size);
@@ -98,15 +94,13 @@ std::vector<uint128_t> OPPRFPSURecv(
   recvbaxos.Decode(absl::MakeSpan(elem_hashes), absl::MakeSpan(sendermasks),
                    absl::MakeSpan(k), 8);
 
-  
-
   yacl::parallel_for(0, sender_bin_size, [&](int64_t begin, int64_t end) {
     for (int64_t idx = begin; idx < end; ++idx) {
-      auto mask = sendermasks[idx] ^
-                         (delta_gf128 * elem_hashes[idx]).get<uint128_t>(0);
-      sendermasks1[idx] = mask^values1[idx];
-      sendermasks2[idx] = mask^values2[idx];
-      sendermasks3[idx] = mask^values3[idx];
+      auto mask =
+          sendermasks[idx] ^ (delta_gf128 * elem_hashes[idx]).get<uint128_t>(0);
+      sendermasks1[idx] = mask ^ values1[idx];
+      sendermasks2[idx] = mask ^ values2[idx];
+      sendermasks3[idx] = mask ^ values3[idx];
     }
   });
 
@@ -130,11 +124,10 @@ std::vector<uint128_t> OPPRFPSURecv(
       ctx->NextRank(),
       yacl::ByteContainerView(p12.data(), p12.size() * sizeof(uint128_t)),
       "Send p12");
-    ctx->SendAsync(
+  ctx->SendAsync(
       ctx->NextRank(),
       yacl::ByteContainerView(p13.data(), p13.size() * sizeof(uint128_t)),
       "Send p13");
-
 
   auto result = elem_hashes;
   return result;
@@ -161,8 +154,8 @@ void OPPRFPSUSend(const std::shared_ptr<yacl::link::Context>& ctx,
                  okvs::PaxosParam::DenseType::GF128, seed);
   recvbaxos.Init(recv_bin_size, recv_bin_size, weight, ssp,
                  okvs::PaxosParam::DenseType::GF128, seed);
-    
-     uint128_t recvokvssize = recvbaxos.size();
+
+  uint128_t recvokvssize = recvbaxos.size();
   // VOLE
   ctx->SendAsync(ctx->NextRank(), yacl::SerializeUint128(recvokvssize),
                  "baxos.size");
@@ -174,7 +167,6 @@ void OPPRFPSUSend(const std::shared_ptr<yacl::link::Context>& ctx,
     auto sv_receiver = yacl::crypto::SilentVoleReceiver(codetype);
     sv_receiver.Recv(ctx, absl::MakeSpan(a), absl::MakeSpan(c));
   });
-  
 
   // Encode
   std::vector<uint128_t> p(recvokvssize);
@@ -196,14 +188,12 @@ void OPPRFPSUSend(const std::shared_ptr<yacl::link::Context>& ctx,
       yacl::ByteContainerView(aprime.data(), recvokvssize * sizeof(uint128_t)),
       "Send A' = P+A");
 
-
   std::vector<uint128_t> receivermasks(cuckooHash.cuckoolen_);
   recvbaxos.Decode(absl::MakeSpan(cuckooHash.bins_),
                    absl::MakeSpan(receivermasks), absl::MakeSpan(c), 8);
 
   size_t sizep1 =
       DeserializeUint128(ctx->Recv(ctx->PrevRank(), "the size of p1"));
-
 
   std::vector<uint128_t> p11(sizep1);
   std::vector<uint128_t> p12(sizep1);
@@ -241,5 +231,4 @@ void OPPRFPSUSend(const std::shared_ptr<yacl::link::Context>& ctx,
       ts3[idx] = ts3[idx] ^ receivermasks[idx];
     }
   });
-  
 }
