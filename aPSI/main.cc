@@ -18,22 +18,14 @@
 #include <json/json.h>
 
 #include <cstddef>
-#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "aPSI.h"
-#include "apsi/oprf/oprf_receiver.h"
-#include "apsi/receiver.h"
-#include "apsi/util/utils.h"
 
 #include "yacl/base/int128.h"
-#include "yacl/crypto/hash/hash_utils.h"
-#include "yacl/utils/parallel.h"
-#include "yacl/utils/serialize.h"
 
 using namespace std;
 using namespace apsi;
